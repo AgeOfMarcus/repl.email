@@ -1,0 +1,109 @@
+.nav {
+    background-color: transparent !important;
+}
+
+#top-nav {
+    border-bottom: 1px solid rgba(37,54,85,0.8);
+    background-color: rgba(37,54,85,0.25) !important;
+}
+
+.nav a {
+    color: #f3f3f3 !important;
+}
+
+body {
+    background-color: #26242E !important;
+    color: #f3f3f3 !important;
+}
+
+input {
+    color: #f3f3f3 !important;
+}
+
+.navbar {
+    background-color: rgba(37,54,85,0.4) !important;
+
+    border-right: 0.5px solid #282e47;
+    border-left: 0px;
+}
+
+.leftpane {
+    background-color: rgba(37,54,85,0.35) !important;
+}
+
+.node a {
+    color: #f3f3f3 !important;
+}
+/* Change the link color on hover */
+.node a:hover {
+    background-color: rgba(37,54,85,0.9) !important;
+}
+
+#email-types label {
+    background: #212939;
+}
+
+#email-types label:hover {
+    background: #2C384D;
+}
+
+
+#no-msgs-body {
+    color: #f3f3f3 !important;
+}
+#no-msgs-head {
+    color: #4183c4 !important;
+}
+
+code {
+    background-color: #26242E !important;
+}
+
+
+/* compose */
+#compose-cont {
+    background-color: #233142 !important;
+}
+#movableheader {
+    background-color: rgb(40,49,70) !important;
+    border-bottom: 1px solid rgba(37,54,85,0.8);
+}
+.compose-btn {
+    background-color: rgb(52, 69, 89) !important;
+}
+.compose-btn:hover {
+    background-color: rgb(62, 81, 105) !important;
+}
+.choices__inner {
+    color: #478ed4 !important;
+}
+.choices__input {
+    color: #f3f3f3 !important;
+}
+.choices__list--dropdown {
+    background-color: rgb(40,49,70) !important;
+    border-color: rgba(37,54,85,0.8) !important;
+}
+.choices__item {
+    color: #478ed4 !important;
+}
+.compose-input {
+    color: #f3f3f3 !important;
+}
+#body {
+    color: #f3f3f3 !important;
+}
+
+.pin-container label:hover::before {
+    background-color: rgba(63, 59, 130,0.5) !important;
+}
+
+
+.attachment-item {
+    background-color: rgba(84, 88, 128, 0.3) !important;
+    border-color: rgb(92, 96, 135) !important;
+
+}
+.attachment-item:hover {
+    background-color: rgba(84, 88, 128, 0.5) !important;
+}

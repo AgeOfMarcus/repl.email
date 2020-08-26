@@ -1,0 +1,5 @@
+dont load all emails at once cause that slows things down, only load deleted tab when you click on it maybe
+
+add attatchments in sending emails
+
+add a little editor bar to help with markdown (eg, bold, italic) and also a button to embed repls {{ user|repl }}

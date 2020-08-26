@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class='nav' style='background-color: #333'>
+    <div style='display: flex'>
+        <a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
+            <i class="fa fa-bars fa-2x"></i>
+        </a>
+
+        <div style='display: block; padding: 15px 15px;'>
+            <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
+        </div>
+    </div>
+</div>
+
+<div style='display: flex'>
+<ul class='navbar'>
+    <li class='nav'><a href='/'>Home</a></li>
+    <li class='nav active'><a href='/login'>Login</a></li>
+    <!--
+    <li style='float: right' >{% include "badge.html" %}</li>
+    -->
+</ul>
+
+<script>
+    function toggleNav() {
+        var nav = document.getElementsByClassName("navbar")[0];
+        if (nav.style.display == 'block' || nav.style.display === '') {
+            nav.style.display = 'none';
+        }
+        else {
+            nav.style.display = 'block';
+        }
+    }
+</script>
+
+<div class='container'>
+    <h1>Login</h1>
+
+    <br><br>
+
+    <div class='card container' style='width: 60%'>
+        <img src='https://repl.it/public/images/favicon.ico'>
+        <div class='card-container'>
+            <h4><b>Log in with repl.it</b></h4>
+            <script authed='window.location.href = "/auth"' src='/static/auth.js'></script>
+        </div>
+    </div>
+
+    <br><br>
+
+    <h3>Don't have an account?</h3>
+    <a href='https://repl.it/signup'>Sign up to repl.it here</a>
+
+    <br><br>
+
+    <h2 id='safari'>On safari? Get your <a href='/settings'>API Key</a> from another browser and sign in here</h2>
+
+    <form action='/noreplauth' method='POST'>
+        <label for='user'>repl.it username</label>
+        <input name='user'><br>
+        <label for='apik'>API Key</label>
+        <input name='apik'><br><br>
+
+        <input type='submit'>
+    </form>
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,1291 @@
+{% extends "base.html" %}
+{% block content %}
+<script>
+    const user = "{{ user }}";
+    const token = "{{ token }}";
+    const pfp = "{{ pfp }}";
+    const isMobile = '{{ isMobile }}' != 'None';
+
+    globalThis.theme = "{{ theme }}";
+    globalThis.style = "{{ style }}" || 'modern'; // classic or modern
+    globalThis.dateFormat = "{{ dateFormat }}" || 'detailed'; // detailed or simple
+    optType = 1;
+
+    // all selected emails ids will be in here
+    var selected = [];
+
+    // true if chanegs are made false after refresh
+    needChange = false;
+</script>
+
+<!-- webmail stylesheet -->
+<link rel='stylesheet' href='/static/webmail2111.css'>
+
+<style>
+.navbar {
+    min-width: 125px;
+    max-width: 175px;
+}
+
+
+.DELETED fa-circle {
+    display: none;
+}
+
+
+.modern-name {
+    width: 35% !important;
+}
+.modern-name:hover {
+    overflow: visible;
+    background-color: inherit;
+    width: fit-content !important;
+    min-width: 35% !important;
+}
+.modern-name:hover:after {
+    content: '.'; // makes a small space
+    opacity: 0;
+    color: transparent;
+}
+</style>
+
+<!-- the end of emails function -->
+<link href='//fonts.googleapis.com/css?family=Dosis:400,600' rel='stylesheet' type='text/css'>
+<script>
+firstTime = true;
+jQuery(function($) {
+    $('#leftpane').on('scroll', function() {
+        if($(this).scrollTop() + $(this).innerHeight() + 100 >= $(this)[0].scrollHeight) {
+            $('#theEnd').css('display', 'block');
+            if (firstTime) {
+                play();
+                firstTime = false;
+            }
+        }
+    })
+});
+
+function play() {
+	setTimeout( function() {
+        var l = $('#theEnd');
+
+		// modify this one line below, and see the result !
+		var logoTitle = "You've reached the end.";
+		var logoRandom = '';
+		var possible = "-+*/|}{[]~\\\":;?/.><=+-_)(*&^%$#@!)}";
+
+		function generateRandomTitle(i, logoRandom) {
+			setTimeout( function() {
+				l.text(logoRandom);
+			}, i*70 );
+		}
+
+		for( var i=0; i < logoTitle.length+1; i++ ) {
+			logoRandom = logoTitle.substr(0, i);
+			for( var j=i; j < logoTitle.length; j++ ) { 
+				logoRandom += possible.charAt(Math.floor(Math.random() * possible.length)); 
+			}
+			generateRandomTitle(i, logoRandom);
+			logoRandom = '';
+		}
+
+	}, 500 );
+
+}
+</script>
+
+
+<!-- top nav bar -->
+<div id='top-nav' class='nav' style='background-color: #333'>
+    <div style='display: flex'>
+        <a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
+            <i class="fa fa-bars fa-2x"></i>
+        </a>
+
+        <div style='display: block; padding: 15px 15px; flex: 2 1 auto'>
+            <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
+
+            <div class='nav-image' style='overflow: hidden; border-radius: 50%; width: 35px; height: 35px; margin-left: 15px;  float: left;'>
+                <img src='{{ pfp }}' style='width: 35px; height: auto; cursor: pointer' onclick='window.location.href = "https://repl.it/@{{ user }}"'' />
+            </div>
+
+            <div class='username' style='font-weight: bold; color: #4183c4; margin-left: 15px; font-size: 20px; float: left; cursor: pointer'>
+                <span onclick='window.location.href = "https://repl.it/@{{ user }}"'>{{ user }}</span>
+                <span style='color: grey; cursor: default'> / </span>
+                <span style='color: #f3f3f3; cursor: default'>inbox</span>
+            </div>
+
+            <!-- search bar -->
+            <div style='float: left; width: 40%; margin-left: 20px'>
+                <input type='search' id='search' style='transition: all 0.5s' placeholder='Search mail' oninput='change()'></input>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- search functionality -->
+<script>
+    function search() {
+        var input = document.getElementById('search');
+        filter = input.value.toUpperCase();
+
+        $('li','#messages').each(function() {
+            // inbox
+            if (optType === 1) {
+                if (!$(this).attr('class').includes('DELETED')) {
+                    if ($(this).text().toUpperCase().indexOf(filter) > -1) {
+                        $(this).css("display", "block");
+                    }
+                    else {
+                        $(this).css("display", "none");
+                    }
+                }
+            }
+
+            // UNREAD
+            if (optType === 2) {
+                if (!$(this).attr('class').includes('Read')) {
+                    if ($(this).text().toUpperCase().indexOf(filter) > -1) {
+                        $(this).css("display", "block");
+                    }
+                    else {
+                        $(this).css("display", "none");
+                    }
+                }
+                if ($(this).attr('class').includes('DELETED')) {
+                    $(this).css("display", "none");
+                }
+            }
+
+            // DELETED
+            if (optType === 3) {
+                if ($(this).attr('class').includes('DELETED')) {
+                    if ($(this).text().toUpperCase().indexOf(filter) > -1) {
+                        $(this).css("display", "block");
+                    }
+                    else {
+                        $(this).css("display", "none");
+                    }
+                }
+            }
+
+            // Important
+            if (optType === 5) {
+                if ($(this).attr('class').includes('Important')) {
+                    if ($(this).text().toUpperCase().indexOf(filter) > -1) {
+                        $(this).css("display", "block");
+                    }
+                    else {
+                        $(this).css("display", "none");
+                    }
+                }
+                if ($(this).attr('class').includes('DELETED')) {
+                    $(this).css("display", "none");
+                }
+            }
+
+            // sent
+            if (optType === 4) {
+            
+            }
+        })
+
+        areHidden();
+    }
+
+    var timer;
+    function change(type){
+        clearTimeout(timer);
+        timer = setTimeout(search, 500);
+    }
+</script>
+
+<div style='display: flex; height: 100%'>
+    <!-- left nav bar -->
+    <ul class='navbar'>
+        <li class='nav'><a onclick='newMessage()'><i class="fa fa-plus" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Compose</a></li>
+
+        <li class='nav'><a onclick='refresh()'><i class="fa fa-repeat" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Refresh</a></li>
+
+        <li class='nav'><a href='/logout'><i class="fa fa-sign-out" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Logout</a></li>
+
+        <li class='nav'><a href='/settings'><i class="fa fa-cog" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Settings</a></li>
+        
+        <li class='nav'><a href='/app?action=compose&to=MarcusWeinberger@repl.email; rafrafraf@repl.email&subject=Feedback/Suggestion'><i class="fa fa-envelope" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Feedback</a></li>
+
+        <li id='markAsReadBtn' class='nav' style='display: none'><a onclick='readAllSelected()'>Mark as read</a></li>
+
+        <li id='toggleHTML' class='nav' style='display: none'><a onclick='toggleHTML()'>Toggle HTML/Text</a></li>
+    </ul>
+
+    <!-- left navbar open close func -->
+    <script>
+        function toggleNav() {
+            var nav = document.getElementsByClassName("navbar")[0];
+            if (nav.style.display == 'block' || nav.style.display === '') {
+                nav.style.display = 'none';
+            }
+            else {
+                nav.style.display = 'block';
+            }
+        }
+    </script>
+
+    <div id='rest' style='flex: 5 1 auto'>
+        <div id='first' class='flexrow'>
+            <!-- emails list -->
+            <div class='leftpane' id='leftpane'>
+                <!-- email type buttons -->
+                <div style='width: 100%; height: 50px'>
+                    <ul id='email-types'>
+                        <li>
+                            <input onclick='changeType(1);document.getElementById("search").value = ""' type='radio' id='opt1' name='type-opt' checked>
+                            <label for='opt1'>Inbox<span id='inboxCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                        </li>
+                        <li>
+                            <input onclick='changeType(2);document.getElementById("search").value = ""' type='radio' id='opt2' name='type-opt'>
+                            <label for='opt2'>Unread<span id='unreadCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                        </li>
+                        <li>
+                            <input onclick='changeType(5);document.getElementById("search").value = ""' type='radio' id='opt5' name='type-opt'>
+                            <label for='opt5'>Important<span id='importantCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                        </li>
+                        <li>
+                            <input onclick='changeType(3);document.getElementById("search").value = ""' type='radio' id='opt3' name='type-opt'>
+                            <label for='opt3'>Trash<span id='trashCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                            
+                        </li>
+                        <li>
+                            <input onclick='changeType(4);document.getElementById("search").value = ""' type='radio' id='opt4' name='type-opt' disabled>
+                            <label for='opt4'>Sent<span id='sentCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- no messages -->
+                <div id='no-msgs-cont' class='no-msgs' style='display: none'>
+                    <img src='./static/mail.png' style='width: 70%; height: auto;' />
+                    <div>
+                        <span id='no-msgs-head' style='font-size: 20px; color: #333'>No messages in your inbox, yet!</span>
+                        <br>
+                        <span id='no-msgs-body' style='font-size: 14px; color: grey'>Start chatting with coders around you.</span>
+                    </div>
+                </div>
+
+                <!-- email load animation -->
+                <div class="loader" style='display: none'>
+                    <div class="reverse-spinner"></div>
+                </div>
+
+                <!-- all messages -->
+                <ul class='pane' id='messages'>
+                    
+                </ul>
+
+                <!-- the end text -->
+                <div id='theEnd' style='display: none; margin-bottom: 500px; color: #4183c4'></div>
+            </div>
+
+            <!-- email page -->
+            <div id='display' style='display: none;'>
+                <div style='padding: 15px 15px;'>
+                    <a style='margin-right: 15px'><i class="fa fa-long-arrow-left fa-2x icon-btn" onclick='closeMessage()'></i></a>
+                    <a onclick='replyToMessage()' style='background-color: #333; padding: 5px 12px; border-radius: 15px'><i class='fa fa-reply'></i></a>
+                    
+                    <!-- dropdown menu -->
+                    <div class='dropdown'> 
+                        <i data-title='More' onclick="myFunction()" class="fa fa-ellipsis-h icon-btn"></i>
+                        <ul id='myDropdown' class="dd-menu">
+                            <li onclick='replyToMessage()'><i class='fa fa-reply'></i> Reply</li>
+                            <li onclick='forwardMessage()'>Forward</li>
+                            <li>Mark as unread (!ROAD WORK!)</li>
+                            <li class="divider"></li>
+                            <li onclick='deleteMessage()' style='color: red !important; font-weight: bold'><i class="fa fa-trash" aria-hidden="true"></i> Delete message</li>
+                        </ul>
+                    </div>
+                    <script>
+                        /* When the user clicks on the button, 
+                        toggle between hiding and showing the dropdown content */
+                        function myFunction() {
+                        document.getElementById("myDropdown").classList.toggle("show");
+                        }
+
+                        // Close the dropdown if the user clicks outside of it
+                        window.onclick = function(event) {
+                        if (!event.target.matches('.icon-btn')) {
+                            var dropdowns = document.getElementsByClassName("dd-menu");
+                            var i;
+                            for (i = 0; i < dropdowns.length; i++) {
+                            var openDropdown = dropdowns[i];
+                            if (openDropdown.classList.contains('show')) {
+                                openDropdown.classList.remove('show');
+                            }
+                            }
+                        }
+                        }
+                    </script>
+
+
+                    <label for='from'>From:</label>
+                    <input name='from' id='from' readonly><br>
+                    <label for='msubject'>Subject:</label>
+                    <input name='msubject' id='msubject' readonly><br>
+                    <label for='mdate'>Date:</label>
+                    <input name='mdate' id='mdate' readonly><br><br>
+                    <input id='mid' hidden>
+
+                    <!-- attachments -->
+                    <div id='attachments'>
+                    
+                    </div>
+
+                    <div id='mtext' style='width: 90%; height: 100%; overflow-wrap: break-word; display: none'></div>
+                    <div id='mhtml' style='width: 90%; height: 100%; overflow-wrap: break-word'></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- compose tab -->
+<div id='movable' style='display: none'>
+    <div id='movableheader' style='width: 100%; height: 40px; background-color: #333; cursor: move; padding: 10px 10px; color: #f3f3f3; font-weight: bold; z-index: 9999; position: relative;'><a style='font-size: 14px; cursor: move;'>New Message</a><a style='position: absolute; right: 10' onclick='hideMessage()'><i class="fa fa-times icon-btn"></i></a></div>
+
+    <div id='compose-cont' style='padding: 10px 10px; z-index: 9999; position: relative'>
+        <div class='ui-widget' id='compose' style='height: 80%'>
+
+            <!-- ----------------TO INPUT BOX ---------------- -->
+            <input id="to" type="text" value='' placeholder="Enter something">
+            <script>
+                var firstElement = document.getElementById('to');
+                const choices1 = new Choices(firstElement, {
+                    delimiter: ';',
+                    editItems: true,
+                    addItems: true,
+                    removeItems: true,
+                    removeItemButton: true,
+                    placeholder: true,
+                    placeholderValue: 'recipients',
+                });
+            </script>
+            <!-- ----------------/TO INPUT BOX ---------------- -->
+
+            <input class='compose-input' placeholder="Subject" name='subject' id='subject' autocomplete="off" >
+            <br>
+            
+            <input class='compose-input' placeholder='Secure email with password (optional)' name='password' id='msg_pass' autocomplete="off">
+            
+            <div style='display: flex; flex-direction: column; height: inherit'>
+                <textarea id='body' style='width: 100%; height: 50%; resize: none; border-color: transparent !important;' autocomplete="off"></textarea>
+            
+                <div id='marked' data-placeholder='Text you type will be rendered as markdown here.' style='width: 100%; height: 50%; overflow-y: scroll; border: 1px solid rgba(129, 132, 166, 0.5)'></div>
+            </div>
+        </div>
+
+        <div style='height: 20%'>
+        <a class='compose-btn' style='background-color: #333; padding: 5px 12px; border-radius: 10px;' onclick='sendMessage()'>send</a>
+        <a style='color: red !important; font-weight: bold' onclick='hideMessage()'>discard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+//Make the DIV element draggagle:
+dragElement(document.getElementById("movable"));
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    /* if present, the header is where you move the DIV from:*/
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    /* otherwise, move the DIV from anywhere inside the DIV:*/
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    /* stop moving when mouse button is released:*/
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+</script>
+
+<!---
+<div class="hover_bkgr_fricc">
+    <span class="helper"></span>
+    <div>
+        <div class="popupCloseButton">&times;</div>
+        <div class='flexrow'>
+            <div style='float: left; width: 40%' id='editor'>
+                <label for='to_'>To:</label>
+                <input name='to_' id='to_'><br>
+                <label for='subject_'>Subject:</label>
+                <input name='subject_' id='subject_'><br>
+                <textarea id='body_' placeholder="message body" style='width: 100%'></textarea><br>
+            </div>
+            <div style='float: right; width: 60%' id='content_'>
+            </div>
+        </div>
+    </div>
+</div>
+--->
+<style>
+#status {
+    position: fixed;
+    bottom: 0px;
+    left: 0;
+    width: 100vw;
+    height: 20px;
+
+    background-color: rgba(92, 98, 128, 0.5);
+    border-top: 1px solid #4183c4;
+    opacity: 0.8;
+    line-height: 1 !important;
+}
+
+</style>
+<footer id='status'></footer>
+
+<script src='/static/paste.js'></script>
+<script src='/static/image.js'></script>
+<script src='/static/parser.js'></script>
+<script>
+
+$(function() {
+    $.get('https://notes.marcusj.tech/link/status.repl.email?render=false', (c) => {
+        $('#status').html(c);
+    })
+})
+
+var pastes = [];
+var pfps = {};
+var theme = "{{ theme }}";
+var emails_by_flag = {};
+
+function htmlsafe(html) {
+    return sanitizeHtml(html, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img', 'h1', 'div', 'iframe', 'span' ]),
+        allowedAttributes: {
+            a: ['href', 'name', 'target', 'id'],
+            img: ['src'],
+            span: ['id'],
+            iframe: ['src', 'height', 'width', 'scrolling', 'frameborder', 'allowtransparency', 'allowfullscreen', 'sandbox'],
+        },
+    });
+}
+
+function api(uri, data, callback) {
+    $.ajax({
+        url: '/api' + uri,
+        type: 'post',
+        data: JSON.stringify(data),
+        headers: {
+            token: token,
+        },
+        contentType: 'application/json',
+        success: callback
+    })
+}
+
+$( function() {
+    api('/contacts', {}, (res) => {
+        $('#to').autocomplete({
+            source: res['contacts']
+        })
+    })
+})
+
+function get_by_flag(flag, num=-1) {
+    api('/get/by/flag', {
+        'flag': flag,
+        'num': num,
+    }, (res) => {
+        globalThis.emails_by_flag[flag] = res;
+    })
+}
+
+function delete_forever(id) {
+    api('/delete/forever', {'id':id}, (res) => {
+        $.notify('Deleted', 'success');
+    })
+}
+
+function set_theme(t) {
+    api('/settings/theme', {'theme': t}, (res) => {
+        globalThis.theme = res;
+    })
+}
+
+function get_sent() {
+    api('/sent', {}, (res) => {
+        globalThis.sent_emails = res;
+    })
+}
+
+function get_theme() {
+    api('/settings/theme', {}, (res) => {
+        globalThis.theme = res;
+    })
+}
+
+function api_settings(ns={}) {
+    api('/settings', {'settings':ns}, (res) => {
+        for (k in res) {
+            globalThis[k] = res[k];
+        }
+    })
+}
+
+function set_flags_dict(dict, notif=true) {
+    api('/flag', dict, (res) => {
+        if (notif) {
+            $.notify('Updated', 'success');
+        }
+    })
+
+    needChange = true;
+}
+ 
+function set_flags(ids, flags, notif=true) {
+    var d = {};
+
+    d[ids] = flags;
+    
+    console.log(d)
+    api('/flag', d, (res) => {
+        if (notif) {
+            $.notify('Updated', 'success')
+        }
+        console.log(res)
+    })
+
+    needChange = true;
+}
+
+function get_profile(username) {
+    if (username in pfps) {
+        return pfps[username];
+    } else {
+        api('/profile', {'username': username}, (res) => {
+            pfps[username] = res['url'];
+        })
+    }
+}
+
+function countEmails() {
+    // inbox
+    $('#inboxCnt').text(`(${$('#messages li:not(.DELETED)').length})`);
+
+    // unread
+    $('#unreadCnt').text(`(${$('#messages li:not(.DELETED) i.fa-circle').length})`);
+
+    // important
+    $('#importantCnt').text(`(${$('#messages li.Important').length})`);
+
+    // trash
+    $('#trashCnt').text(`(${$('#messages li.DELETED').length})`);
+}
+
+function changeType(to=optType) { // shows/hides emails in pane based on optType
+    optType = to;
+    countEmails();
+    $('#theEnd').css('display', 'none');
+
+    $('li','#messages').each(function() {
+        // inbox
+        if (optType === 1) {
+            if ($(this).attr('class').includes('DELETED')) {
+                $(this).css("display", "none");
+            }
+            else {
+                $(this).css("display", "block");
+            }
+        }
+
+        // UNREAD
+        if (optType === 2) {
+            if ($(this).attr('class').includes('Read')) {
+                $(this).css("display", "none");
+            }
+            else {
+                $(this).css("display", "block");
+            }
+            if ($(this).attr('class').includes('DELETED')) {
+                $(this).css("display", "none");
+            }
+        }
+
+        // DELETED
+        if (optType === 3) {
+            if (!$(this).attr('class').includes('DELETED')) {
+                $(this).css("display", "none");
+            }
+            else {
+                $(this).css("display", "block");
+            }
+        }
+
+        // Important
+        if (optType === 5) {
+            if (!$(this).attr('class').includes('Important')) {
+                $(this).css("display", "none");
+            }
+            else {
+                $(this).css("display", "block");
+            }
+            if ($(this).attr('class').includes('DELETED')) {
+                $(this).css("display", "none");
+            }
+        }
+
+        // sent
+        if (optType === 4) {
+            
+        }
+    });
+
+    areHidden();
+    $('.loader').hide();
+}
+
+function areHidden() {
+    if ($('#messages').children(':visible').length === 0) {
+        if (!$('.loader').is(':visible')) {
+            $('#no-msgs-cont').css('display','block');
+        }
+    }
+    else {
+        $('#no-msgs-cont').css('display','none');
+    }
+    pinToTop();
+}
+
+function togglePin(id, checked, flags) {
+    if (!flags.includes('DELETED')) {
+        if (checked) {
+            if (!flags.includes('PINNED')) {
+                flags.push('PINNED');
+            }
+            
+            set_flags(parseInt(id), flags);
+
+            $(`${id}li`).addClass('PINNED');
+        }
+        else {
+            if (flags.includes('PINNED')) {
+                flags.splice(flags.indexOf('PINNED'), 1);
+            }
+
+            set_flags(parseInt(id), flags);
+
+            $(`${id}li`).removeClass('PINNED');
+        }    
+    }
+}
+
+function toggleImportant(id, checked) {
+    var newid = id.replace(/f/g, '');
+    var flags = emails[newid]['flags'];
+    if (!flags.includes('DELETED')) {
+        if (checked) {
+            if (!flags.includes('Important')) {
+                flags.push('Important');
+            }
+            
+            set_flags(parseInt(newid), flags);
+
+            $(`#${newid}li`).addClass('Important');
+        }
+        else {
+            if (flags.includes('Important')) {
+                flags.splice(flags.indexOf('Important'), 1);
+            }
+
+            set_flags(parseInt(newid), flags);
+
+            $(`#${newid}li`).removeClass('Important');
+        }    
+    }
+}
+
+function pinToTop() {
+    var firstGo = true;
+
+    var last = '#messages li:first-child';
+    $('#messages').children().each(function () {
+        if ($(this).hasClass('PINNED')) {
+            if (firstGo) {
+                $(this).remove().insertBefore($(last));
+                firstGo = false;
+            }
+            else {
+                $(this).remove().insertAfter($(last));
+            }
+            last = this;
+        }
+    });
+}
+
+function readThis(id, flags, notif=true) { // marks email as read
+    if (!flags.includes('DELETED')) {
+        if (!flags.includes('Read')) {
+            flags.push('READ');
+        }
+        
+        set_flags(parseInt(id), flags, notif);
+
+        $(`#${id}circle`).remove();    
+    }
+}
+
+function readAllSelected() { // read all selected on wokring yet
+    //readThis(selected, emails[parseInt(selected[x])]['flags'], false)
+}
+
+function selectThisEmail(id, checked) { // make it do one call for all emails that are unread instead of unread every individual one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    var newid = id.replace(/c/g, '');
+
+    //console.log(selected)
+    if (checked) {
+        $(`#${newid}li`).addClass('selected');
+
+        selected.push(parseInt(newid));
+    }
+    else {
+        $(`#${newid}li`).removeClass('selected');
+
+        selected = selected.filter(function(e) { return e !== newid })
+    }
+    //console.log(selected)
+
+    selectedEmails();
+}
+
+function selectedEmails() {
+    if (selected.length > 0) {
+        $('#markAsReadBtn').show();
+    }
+    else {
+        $('#markAsReadBtn').hide();
+    }
+}
+
+
+lastRefresh = 0;
+function refresh(show_gif=true, num=-1) {
+    if (lastRefresh === 0) {
+        $('.loader').show();
+    }
+    
+    api('/get', {'num': num}, (emails) => {
+        console.log(lastRefresh, Object.keys(emails).length, lastRefresh === Object.keys(emails).length)
+
+        if (lastRefresh !== Object.keys(emails).length || needChange) {
+            needChange = false;
+            $('#messages').empty();
+
+            if (show_gif) {
+                $('.loader').show();
+            }
+
+
+            globalThis.emails = emails;
+
+            var count = 0;
+            for (id in emails) {
+                if (emails[id]['flags'].includes('Deleted')) {
+                    api('/delete', {'id':id}, (res) => {
+                        $.notify('DELETED', 'info');
+                    })
+                }
+                
+                //console.log(devDateFormat, devStyle)  
+                //console.log(style, dateFormat)  //--------------- OVER HERE
+
+                // simple date
+                var modernDate;
+                if (dateFormat === 'simple') {
+                    // modern date
+                    var temp = emails[id]['date'].split(/[ ,]+/);
+                    modernDate = `${temp[2]} ${temp[1]}, ${temp[3]}`;
+                    modernDate = moment(modernDate, 'll').fromNow();
+                }
+                // detailed date
+                else {
+                    modernDate = emails[id]['date'];
+                }
+
+                // read/unread
+                var tmpflag = '';
+                for (i in emails[id]['flags']) {
+                    tmpflag += "'" + emails[id]['flags'][i] + "',";
+                }
+                var onclickRead = `readThis(${id}, [${tmpflag}])`;
+                var read = `<i id="${id}circle" class="fa fa-circle"></i>`;
+                if (emails[id]['flags'].includes('Read')) {
+                    onclickRead = '';
+                    read = '';
+                }
+
+                // Important
+                var imp = '';
+                if (emails[id]['flags'].includes('Important')) {
+                    imp = 'checked';
+                }
+
+                // pin
+                var div = $(`<li id="${id}li" class="node ${emails[id]["flags"].join(' ')}" style="display: none"></li>`);
+
+                if (emails[id]['flags'].includes('PINNED')) { // PINNED
+                    div.append('<div></div>').html(`
+                    ${read}
+                    <div class="pin-container">
+                        <input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" />
+                        <label class='select-email-box' data-title='Select' for="${id}c"> </label>
+
+                        <input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" checked/>
+                        <label data-title='Pin' for="${id}"> </label>
+
+                        <input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
+                        <label class='important' data-title='Important' for="${id}f"> </label>
+                    </div>
+                    `);
+                }
+                else { // not PINNED
+                    div.append('<div></div>').html(`
+                    ${read}
+                    <div class="pin-container">
+                        <input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" />
+                        <label class='select-email-box' data-title='Select' for="${id}c"> </label>
+
+                        <input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" />
+                        <label data-title='Pin' for="${id}"> </label>
+
+                        <input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
+                        <label class='important' data-title='Important' for="${id}f"> </label>
+                    </div>
+                    `);
+                }       
+
+                // CLASSIC STYLE
+                if (style === 'classic') {
+                    div.append($('<a></a>').html(`From: ${emails[id]['from'].split('<').join('').split('>').join('')}<br>Subject: ${emails[id]['subject']}<br>Date: <span class='date'>${modernDate}</span>`).attr('href', '#').attr('onclick', 'openMessage(' + id.toString() + `);${onclickRead}`)); // fucking jQuery
+                }
+
+                // MODERN STYLE
+                if (style === 'modern') {
+                    div.append($(`<a class="modern-email" onclick="openMessage(${id.toString()});${onclickRead}"></a>`).html(`
+                    <div class='modern-cont'>
+                        <span class='modern-subject'>
+                            ${emails[id]['subject']}
+                        </span>
+                        <span class='modern-date'>
+                            ${modernDate}
+                        </span>
+                    </div>
+                    
+                    <div class='modern-name'>
+                        ${emails[id]['from'].split('<').join('').split('>').join('')}
+                    </div>
+                    `));
+                }
+
+                count++;
+
+                $("#messages").prepend(div);
+
+                // run this on last iteration
+                if (Object.keys(emails).length === count) {
+                    changeType();
+                }
+            }
+
+        }
+        $.notify('Refreshed', 'info');  
+
+        lastRefresh = Object.keys(emails).length;
+    })
+}
+
+function closeMessage() {
+    $('.leftpane')[0].style = 'display: block';
+    $('#display')[0].style = 'display: none';
+
+    
+    $('#toggleHTML')[0].style = 'display: none';
+
+    areHidden();
+
+    selectedEmails();
+}
+
+function get_attatchments(id) {
+    var ats = {};
+    var keys = Object.keys(emails[id]);
+    for (i in keys) {
+        var key = keys[i];
+        if (!(['from', 'subject', 'to', 'date', 'html', 'text', 'flags'].includes(key))) {
+            ats[key] = emails[id][key];
+        }
+    }
+    return ats;
+}
+
+function openBase64InNewTab (data, mimeType) {
+    var byteCharacters = atob(data);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    var file = new Blob([byteArray], { type: mimeType + ';base64' });
+    var fileURL = URL.createObjectURL(file);
+    window.open(fileURL);
+}
+function redirectOpenFile(id, cnt, ft) {
+    var ats = get_attatchments(id);
+    var count = 0;
+    for (ft in ats) {
+        console.log(cnt, count, cnt===count, cnt==count)
+        if (cnt === count) {
+            openBase64InNewTab(ats[ft], ft);
+            console.log(ats[ft], ft)
+        }
+        
+        count++;
+    }
+}
+function openAttatchment(id, i) {
+    var a = emails[id]['files'][i];
+    openBase64InNewTab(a['data'], a['filetype']);
+}
+
+function openMessage(id) {
+    $('#markAsReadBtn').hide();
+
+    $('#attachments').empty();
+
+    $('.leftpane')[0].style = 'display: none';
+    $('#display')[0].style = 'display: block';
+
+    email = globalThis.emails[id];
+
+    $('#toggleHTML')[0].style = '';
+
+    $('#from')[0].value = email['from'];
+    $('#msubject')[0].value = email['subject'];
+    $('#mdate')[0].value = email['date'];
+
+    $('#mtext')[0].innerHTML = htmlsafe(email['text']);
+    $('#mhtml')[0].innerHTML = htmlsafe(email['html']);
+
+    var ats = emails[id]['files'];
+    for (i in ats) {
+        $('#attachments').append(`
+        <div class='attachment-item' id='${id}' onclick="openAttatchment('${id}', ${i})">
+            <i style='color: rgb(214, 153, 30)' class="fa fa-file fa-2x"></i>
+            <span style='margin-left: 5px;'> ${ats[i]['filename']}</span>
+            <i class="fa fa-external-link icon-btn"></i>
+        </div>
+        `);
+    }
+
+    /*/ add attachments
+    var ats = emails[id]['files'];
+    var cnt = 0;
+    for (ft in ats) {
+        $('#attachments').append(`
+        <div class='attachment-item' id='${id}' onclick="redirectOpenFile(${id}, ${cnt}, '${ft["filetype"]}')">
+            <i style='color: rgb(214, 153, 30)' class="fa fa-file fa-2x"></i>
+            <span style='margin-left: 5px;'> ${ft["filename"]}</span>
+            <i class="fa fa-external-link icon-btn"></i>
+        </div>
+        `);
+        
+        cnt++;
+    }*/
+
+    var pastelink =  $('#mhtml').find('#paste');
+    if (pastelink.length > 0) {
+        var i = pastes.push(pastelink[0].innerText) - 1;
+        pastelink.on('click', function(e) {
+            var uid = pastes[i];
+            var pwd = prompt('Password');
+
+            get_paste(uid, pwd, (res) => {
+                $('#mtext')[0].innerHTML = htmlsafe(res['res']);
+                globalThis.emails[id]['text'] = res['res'];
+                toggleHTML();
+            })
+        }).removeAttr('href').text('🔒 Password Protected Content 🔒');
+    }
+
+    $('#mid')[0].value = id;
+
+    $('#display')[0].style = '';
+
+    if (email['from'].endsWith('@repl.email')) {
+        var uname = email['from'].split('@repl.email')[0];
+        $('#from')[0].style['cursor'] = 'pointer';
+        $('#from').on('click', function() {
+            window.location.href = 'https://repl.it/@' + uname;
+        })
+    }
+}
+
+function forwardMessage() {
+    var id = $('#mid')[0].value;
+    var prev = globalThis.emails[id];
+    newMessage();
+    choices1.clearStore();
+    
+    $('#subject')[0].value = 'FW: ' + prev['subject'];
+    $('#body')[0].value = `\n\n\n----------\nOriginal from: ${prev['from']}<br><br><blockquote>${prev['text']}</blockquote>`
+}
+
+function replyToMessage() {
+    var id = $('#mid')[0].value;
+    var prev = globalThis.emails[id];
+    newMessage();
+    choices1.clearStore();
+    var tmp = `${prev['from']}`;
+    choices1.setValue(
+        [{ value: tmp, label: tmp }],
+        replaceChoices=true)
+    
+    if (prev['subject'].startsWith('RE: ')) {
+        $('#subject')[0].value = prev['subject'];
+    } else {
+        $('#subject')[0].value = 'RE: ' + prev['subject'];
+    }
+
+    $('#body')[0].value = `\n\n\n----------\nReplying to: ${prev['from']}<br><br><blockquote>${prev['text']}</blockquote>`
+}
+
+function newMessage() {
+    $('#movable')[0].style = 'display: block';
+    choices1.clearStore();
+    $('#to').val('');
+    $('#subject')[0].value = '';
+    $('#body')[0].value = '';
+    $('#msg_pass')[0].value = '';
+    $('#marked')[0].innerHTML = '';
+}
+
+function hideMessage() {
+    $('#movable')[0].style = 'display: none';
+}
+
+function sendMessage() {
+    var to = $('#to')[0].value;
+    var subj = $('#subject')[0].value;
+    var body = parse($('#body')[0].value);
+    var mpass = $('#msg_pass')[0].value;
+    
+    if (mpass !== '') {
+        create_paste(body, mpass, (res) => {
+            var uid = res['res'];
+            api('/send', {
+                'to': to.split('; '),
+                'subject': subj,
+                'text': 'https://paste.marcusj.tech/view/' + uid,
+                'html': '<a id="paste" href="https://paste.marcusj.tech/view/' + uid + '">' + uid + '</a>',
+            }, (r) => {
+                if (r['data']['failed'] == 0) {
+                    $.notify('Sent', 'success');
+                    console.log(r);
+                    hideMessage();
+                } else {
+                    $.notify('Error, could not send', 'error');
+                    console.log(r);
+                }
+            });
+        })
+    } else {
+        api('/send', {
+            'to': to.split('; '),
+            'subject': subj,
+            'text': body,
+            'html': marked(body),
+        }, (r) => {
+            if (r['data']['failed'] == 0) {
+                $.notify('Sent', 'success');
+                console.log(r);
+                hideMessage();
+            } else {
+                $.notify('Error, could not send', 'error');
+                console.log(r);
+            }
+        })
+    }
+
+}
+
+function discardMessage() {
+    fields = ['subject', 'body', 'msg_pass'];
+    for (i in fields) {
+        $('#' + fields[i])[0].value = '';
+    }
+
+    $('#from').off('click');
+    $('#from')[0].style['cursor'] = '';
+    choices1.clearStore();
+    $('#marked')[0].innerHTML = '';
+}
+
+function toggleHTML() {
+    if ($('#mtext:hidden').length == 0) {
+        $('#mtext')[0].style = 'width: 100%; height: 100%; overflow-wrap: break-word; display: none';
+        $('#mhtml')[0].style = 'width: 100%; height: 100%; overflow-wrap: break-word';
+    } else {
+        $('#mtext')[0].style = 'width: 100%; height: 100%; overflow-wrap: break-word';
+        $('#mhtml')[0].style = 'width: 100%; height: 100%; overflow-wrap: break-word; display: none';
+    }
+}
+
+function deleteMessage() {
+    var id = $('#mid')[0].value;
+
+    if (id) {
+        api('/delete', {'id':id}, (res) => {
+            $.notify('DELETED', 'info');
+            closeMessage();
+            refresh();
+        })
+    }
+
+    $('#mid')[0].value = '';
+
+    selectedEmails();
+
+    needChange = true;
+}
+
+setInterval(function() {
+    refresh(show_gif=false);
+}, 60 * 1000) // every minute
+
+/*
+// popup editor
+$(window).on('load', function () {
+    $("#trigger_popup").click(function(){
+       $('.hover_bkgr_fricc').show();
+    });
+    $('.popupCloseButton').click(function(){
+        $('.hover_bkgr_fricc').hide();
+    });
+});
+
+$('#body_').bind('input propertychange', function() {
+    $('#content_')[0].innerHTML = marked($('#body_')[0].value);
+})
+*/
+
+var editor = {
+    'italics': function() {
+        var e = $('#body')[0];
+        var s = e.selectionStart;
+        e.value = e.value.substring(0, s) + '**';
+        e.value.substring(e.selectionEnd);
+        e.selectionEnd = s + 1;
+    },
+    'bold': function() {
+        var e = $('#body')[0];
+        var s = e.selectionStart;
+        e.value = e.value.substring(0, s) + '****';
+        e.value.substring(e.selectionEnd);
+        e.selectionEnd = s + 2;
+    },
+}
+
+shortcut.add('ctrl+b', () => { editor.bold() });
+shortcut.add('ctrl+i', () => { editor.italics() })
+
+var textareas = document.getElementsByTagName('textarea');
+var count = textareas.length;
+for(var i=0;i<count;i++){
+    textareas[i].onkeydown = function(e){
+        if(e.keyCode==9 || e.which==9){
+            e.preventDefault();
+            var s = this.selectionStart;
+            this.value = this.value.substring(0,this.selectionStart) + "    " + this.value.substring(this.selectionEnd);
+            this.selectionEnd = s+4; 
+        }
+    }
+}
+
+$('#body')[0].addEventListener('paste', (event) => {
+    var items = event.clipboardData.items;
+    for (i in items) {
+        var item = items[i];
+        if (item.type == 'text/plain') {
+            var text = item.clipboardData.getData('text/plain');
+            if (text.startsWith('https://repl.it/@')) {
+                var embed_code = '<iframe height="400px" width="100%" src="' + text + '?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"></iframe>';
+                $('#body')[0].value += embed_code;
+            } else {
+                continue;
+            }
+        }
+        if (item.type.indexOf('image') == -1) continue;
+        upload_image(item.getAsFile(), (url) => {
+            $('#body')[0].value += '<img src="' + url + '/.png">';
+        })
+    }
+}, false)
+
+$('#body').on('input propertychange', (e) => {
+    $('#marked').html(htmlsafe(marked($('#body')[0].value)));
+})
+
+shortcut.add('ctrl+enter', sendMessage);
+shortcut.add('ctrl+n', newMessage);
+
+refresh(); // initial get emails 
+api_settings(); // update settings
+
+if (isMobile) {
+    toggleNav();
+}
+
+if ({{ compose }}) {
+    newMessage();
+    choices1.clearStore();
+    var c_emails = [];
+    choices1.setValue([
+    {% for e in compose_to %}
+        {value: '{{ e }}', label: '{{ e }}'},
+    {% endfor %}
+    ])
+    $('#subject')[0].value = '{{ compose_subject }}';
+    $('#body')[0].value = '{{ compose_body }}';
+    $('#msg_pass')[0].value = '{{ compose_password }}';
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,1 @@
+{"short_name":"repl.email","name":"repl.email","icons":[{"src":"/static/mail.png","type":"image/png","sizes":"48x48"}],"start_url":"/app","background_color":"rgb(0,0,0)","theme_color":"rgb(0,0,0)","display":"standalone","orientation":"portrait"}

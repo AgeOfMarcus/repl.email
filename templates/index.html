@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+
+.navbar {
+    height: inherit
+}
+
+</style>
+
+<div class='nav' style='background-color: #333'>
+    <div style='display: flex'>
+        <a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
+            <i class="fa fa-bars fa-2x"></i>
+        </a>
+
+        <div style='display: block; padding: 15px 15px;'>
+            <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
+        </div>
+    </div>
+</div>
+
+<div style='display: flex'>
+<ul class='navbar' style="display: none">
+    <li class='nav active'><a href='/'>Home</a></li>
+    <li class='nav'><a href='/login'>Login</a></li>
+
+    <!--
+    <li style='float: right' >{% include "badge.html" %}</li>
+    -->
+</ul>
+
+<script>
+    function toggleNav() {
+        var nav = document.getElementsByClassName("navbar")[0];
+        if (nav.style.display == 'block' || nav.style.display === '') {
+            nav.style.display = 'none';
+        }
+        else {
+            nav.style.display = 'block';
+        }
+    }
+</script>
+
+<div class='container'>
+    <h1>repl.email</h1>
+
+    <h4>The free email service exclusively for <a href='https://repl.it'>repl.it</a> users!</h4>
+    
+    <br>
+
+    <a href='/__repl'><img src='https://repl.it/badge/github/AgeOfMarcus/AgeOfMarcus'></a>
+
+    <br><br>
+
+    <h2>Updates</h2>
+    <iframe src='https://notes.marcusj.tech/link/repl.email' width="70%" height='500px'></iframe>
+
+    <br><br>
+
+    <div class='card container' style='width: 70%'>
+        <div class='card-container'>
+            <img src='https://i.imgur.com/syZrOd9.gif'>
+        </div>
+    </div>
+
+    <br><br>
+    
+    <p>
+        Hosted <b>without a mailserver</b> thanks to <a href='https://smtp2go.com'>smtp2go</a> and <a href='https://improvmx.com'>improvmx</a>.
+    </p>
+
+    <br>
+
+    <h2>Developers</h2>
+
+    <ul>
+        <li><a href='https://repl.it/@MarcusWeinberger'>Marcus Weinberger</a></li>
+        <li><a href='https://repl.it/@rafrafraf'>Rafi Asmoucha</a></li>
+    </ul>
+
+    <br><br>
+</div>
+</div>
+{% endblock %}

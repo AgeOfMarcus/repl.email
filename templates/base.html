@@ -1,0 +1,58 @@
+<head>
+    <title>repl.email</title>
+    <meta name="description" content="A free email service exclusive to repl.it users">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <link rel='stylesheet' href='/static/stylesVt8.css'>
+    <!-- toggle -->
+    <link rel='stylesheet' href='/static/toggle1121.css'>
+    <!-- dark theme -->
+    <link rel='stylesheet' href='/static/styles-dark5111.css' media='none' id='dark'>
+
+   
+
+    <!-- Include Choices CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <!-- Include Choices JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- reference Moment.js library -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.0/milligram.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <link rel="icon" type="image/svg+xml" sizes="48x48" href="/static/mail.png">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="manifest" href="/static/manifest.json">
+</head>
+<body onload='setTheme()'>
+    <script>
+        function setTheme() {
+            if ('{{ theme }}'.includes('dark')) {
+                $("#dark").attr("media", "");
+                $('#switch').prop('checked', true);
+            }
+            else {
+                $("#dark").attr("media", "none");
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src='/static/notify.min.js'></script>
+    <script src='/static/request.js'></script>
+    <script src='/static/sanitize-html.min.js'></script>
+    <script src='/static/shortcut.js'></script>
+    {% block content %}{% endblock %}
+
+    <script async defer src="https://sa.repl.email/latest.js"></script>
+    <noscript><img src="https://sa.repl.email/noscript.gif" alt=""/></noscript>
+</body>

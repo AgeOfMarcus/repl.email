@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Warning!</h1>
+<h3>You are being redirected</h3>
+
+<a href=''></a>
+
+<script>
+
+url = decodeURIComponent("{{ url }}");
+$('a')[0].href = url;
+$('a').text(url);
+
+</script>
+
+{% endblock %}
