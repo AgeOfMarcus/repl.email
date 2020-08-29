@@ -88,12 +88,12 @@ body {
                     <div class="circle">
                     <div class="crescent"></div>
                     </div>
-                    <p class="heading">Choose a style</p>
-                    <p style='margin-bottom: 8px'>Pop or subtle. Day or night.<br>
+                    <p class="heading">Choose a display style</p>
+                    <p style='margin-bottom: 12px'>Pop or subtle. Day or night.<br>
                     Customize your interface
                     </p>
                     <label id='toggle-label' for="switch" style='bacground-color: rgba(0,0,0,.1);'>
-                    <div class="toggle"></div>
+                    <div class="toggle toggle-not-dark"></div>
                     <div class="names">
                         <p class="light">Light</p>
                         <p class="dark">Dark</p>
@@ -104,16 +104,55 @@ body {
             </div>
         </div>
 
-        <br><br>
+<style>
+.toggle-not-dark {
+    background-color: #34323D !important;
+}
+.heading2 {
+    margin: 0 0 .2rem 0 !important;
+}
+</style>
+        <!-- style theme -->
+        <p class="heading heading2">Choose an email style</p>
+        <p style='margin-bottom: 0'>Minimal or complex.<br>
+        Customize your interface
+        </p>
+        <input type="checkbox" id="switch1" onclick='' style='visibility: hidden'>
+        <div class="app">
+            <div class="body">
+                <div class="content">
+                    <label id='toggle-label' for="switch1" style='bacground-color: rgba(0,0,0,.1);'>
+                    <div class="toggle toggle-not-dark"></div>
+                    <div class="names">
+                        <p class="light">Modern</p>
+                        <p class="dark">Classic</p>
+                    </div>
+                    </label>
+                </div>
 
-        <label for='dateFormat'>Date Format</label>
-        <select name='dateFormat' id='dateFormat'>
-            <option value='simple'>Simple</option>
-            <option value='detailed'>Detailed</option>
-        </select>
-        <button style='background-color: #333; border-color: #334' onclick='updateDateFormat()'>Save</button>
+            </div>
+        </div>
 
-        <br><br>
+        <!-- date format theme -->
+        <p class="heading heading2">Choose a date format</p>
+        <p style='margin-bottom: 0'>Minimal or complex.<br>
+        Customize your interface
+        </p>
+        <input type="checkbox" id="switch2" onclick='setDateFormat(this.checked)' style='visibility: hidden'>
+        <div class="app">
+            <div class="body">
+                <div class="content">
+                    <label id='toggle-label' for="switch2" style='bacground-color: rgba(0,0,0,.1);'>
+                    <div class="toggle toggle-not-dark"></div>
+                    <div class="names">
+                        <p class="light">Simple</p>
+                        <p class="dark">Detailed</p>
+                    </div>
+                    </label>
+                </div>
+
+            </div>
+        </div>
 
         <label for='api_key'><a href='https://pypi.org/project/replemail/'>API Key</a></label>
         <input name='api_key' id='api_key' value='{{ api_key }}' readonly>
@@ -192,9 +231,16 @@ function saveTheme() {
     }
 }
 
-function updateDateFormat() {
-    api('/settings', {'dateFormat': $('#dateFormat')[0].value}, (res) => {
-        $.notify('Saved: ' + res, 'success')
+function setDateFormat(checked) {
+    if (checked) {
+        var style = 'detailed';
+    }
+    else {
+        var style = 'simple';
+    }
+    api('/settings', {'dateFormat': style}, (res) => {
+        $.notify(`Saved: ${style} date format`);
+        console.log(res)
     })
 }
 

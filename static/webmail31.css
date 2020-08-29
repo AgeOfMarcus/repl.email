@@ -528,7 +528,7 @@ label {
 }
 
 
--webkit-@keyframes spin {
+@-webkit-@keyframes spin {
   -webkit-from {
     -webkit-transform: rotate(0deg);
     -ms-transform: rotate(0deg);
@@ -583,4 +583,197 @@ label {
     -webkit-transform: rotate(-720deg);
     transform: rotate(-720deg);
   }
+}
+
+
+.navbar {
+    min-width: 125px;
+    max-width: 175px;
+}
+
+#email-types,
+.navbar {
+    line-height: 1 !important;
+}
+
+
+.DELETED .fa-circle {
+    display: none;
+}
+
+.DELETED .modern-email {
+    padding-left: 0 !important;
+}
+
+.DELETED .modern-name {
+    width: 45% !important;
+}
+
+
+.modern-name {
+    width: 35% !important;
+}
+
+.modern-name:hover {
+    overflow: visible;
+    background-color: inherit;
+    width: fit-content !important;
+    min-width: 35% !important;
+}
+
+.modern-name:hover:after {
+    content: '.';
+    opacity: 0;
+    color: transparent;
+}
+
+
+
+
+body {
+    background-color: #dedede;
+}
+
+.navbar-container {
+    padding: 5px 8px 5px 8px;
+    margin: 0 0 0 0;
+    overflow: hidden;
+    flex: 0 0 auto;
+    max-width: 175px;
+}
+
+.navbar {
+    border-radius: 8px;
+    overflow: hidden;
+    padding-top: 10px;
+    border-color: transparent !important;
+    width: unset !important;
+}
+
+.leftpane-container {
+    flex: 1 1 auto;
+    overflow-y: scroll;
+    padding: 5px 5px 5px 0px;
+    position: relative;
+    float: left;
+}
+
+.leftpane {
+    float: unset !important;
+    width: unset !important;
+    overflow: hidden !important;
+    height: fit-content !important;
+    position: relative;
+    min-height: 100%;
+    border-color: transparent !important;
+    border-top-right-radius: 8px;
+}
+
+.all-container {
+    display: flex;
+    height: 100%;
+}
+
+.no-msgs {
+    top: 50% !important;
+}
+
+
+
+#top-nav {
+    border-bottom: 0px !important;
+}
+
+
+.pin-container label[data-title]:hover:after {
+    left: unset !important;
+    transform: translateX(-65%);
+}
+
+
+
+#email-types li label {
+    padding: 15px 0 15px 0;
+}
+
+
+
+.email-tab {
+    width: 175px;
+    height: 40px;
+    background-color: rgb(52, 58, 66);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.email-tab .pin-container label:hover::before {
+    background-color: rgba(51, 51, 51, 0.9275);
+}
+
+.pin-container input[type='checkbox']+.pin-cont-refresh:before {
+    content: "\f01e";
+    color: rgba(186, 189, 212, 0.7);
+    transition: color 0.4s ease-in;
+}
+
+.pin-container input[type='checkbox']:checked+.pin-cont-refresh:before {
+    color: #ebc313 !important;
+}
+
+.pin-container input[type='checkbox']:not(:checked)+.pin-cont-refresh:before {
+    color: rgba(186, 189, 212, 0.7) !important;
+}
+
+.pin-container input[type='checkbox']+.pin-cont-more:before {
+    content: "\f141";
+    font-weight: normal;
+    color: rgba(186, 189, 212, 0.7);
+}
+
+.pin-container input[type='checkbox']:checked+.pin-cont-more:before {
+    color: rgba(186, 189, 212, 0.7) !important;
+}
+
+.pin-container input[type='checkbox']:not(:checked)+.pin-cont-more:before {
+    color: rgba(186, 189, 212, 0.7) !important;
+}
+
+
+#display input:focus {
+    border-color: #478ed4 !important;
+}
+
+#marked:empty:before {
+    opacity: 0.7;
+}
+
+#marked {
+    padding: 3px 3px 3px 3px;
+}
+
+
+.card__corner {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 2em;
+    height: 2em;
+    background-color: #e6e7e8;
+}
+
+.card__corner .card__corner-triangle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 2em 2em 0;
+    border-color: transparent #dedede transparent transparent;
+}
+
+
+#display {
+    background-color: #fff;
+    height: fit-content;
+    overflow-y: visible;
+    margin-bottom: 100px !important;
 }

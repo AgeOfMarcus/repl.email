@@ -1,20 +1,77 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class='nav' style='background-color: #333'>
+<style>
+.navbar {
+    height: calc(100vh - 72px);
+    min-width: 100px !important;
+    max-width: 150px !important;
+}
+.container:not(#login-box):not(#login-box2) {
+    max-height: calc(100vh - 72px);
+    overflow-y: scroll;
+    flex: 2 1 auto;
+    max-width: unset !important;
+}
+
+#login-box {
+    width: 270px;
+    height: 150px;
+    padding-top: 10px;
+}
+</style>
+
+<!-- mobile responsive -->
+<style>
+@media only screen and (max-width: 700px) {
+    #login-box2 {
+        max-width: 90% !important;
+    }
+
+    .navbar {
+        position: absolute;
+        top: 72px;
+        width: 100vw !important;
+        max-width: unset !important;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        background-color: rgb(240, 240, 240);
+        z-index: 9999;
+        padding-top: 10px;
+    }
+    .navbar .nav {
+        width: 100vw !important;
+    }
+    .navbar .nav a {
+        display: block;
+        margin: auto;
+        font-size: 28px;
+    }
+    .navbar .active {
+        border-right: 0px !important;
+        background-color: rgba(68, 135, 201, 0.2) !important;
+    }
+
+    #logo-cont {
+        margin-left: auto;
+    }
+}
+</style>
+
+<div id='top-nav' class='nav' style='background-color: #333'>
     <div style='display: flex'>
         <a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
             <i class="fa fa-bars fa-2x"></i>
         </a>
 
-        <div style='display: block; padding: 15px 15px;'>
+        <div id='logo-cont' style='display: block; padding: 15px 15px;'>
             <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
         </div>
     </div>
 </div>
 
-<div style='display: flex'>
-<ul class='navbar'>
+<div style='display: flex;'>
+<ul class='navbar' style='display: none;'>
     <li class='nav'><a href='/'>Home</a></li>
     <li class='nav active'><a href='/login'>Login</a></li>
     <!--
@@ -26,10 +83,26 @@
     function toggleNav() {
         var nav = document.getElementsByClassName("navbar")[0];
         if (nav.style.display == 'block' || nav.style.display === '') {
-            nav.style.display = 'none';
+            if (!window.matchMedia("(max-width: 700px)").matches) {
+                nav.style.display = 'none';
+            }
+            else {
+                nav.style.opacity = '0';
+                setTimeout(function() {
+                    nav.style.display = 'none';
+                }, 200)
+            }
         }
         else {
-            nav.style.display = 'block';
+            if (!window.matchMedia("(max-width: 700px)").matches) {
+                nav.style.display = 'block';
+            }
+            else {
+                nav.style.display = 'block';
+                setTimeout(function() {
+                    nav.style.opacity = '1';
+                },10)
+            }
         }
     }
 </script>
@@ -37,9 +110,9 @@
 <div class='container'>
     <h1>Login</h1>
 
-    <br><br>
+    <br>
 
-    <div class='card container' style='width: 60%'>
+    <div id='login-box' class='card container'>
         <img src='https://repl.it/public/images/favicon.ico'>
         <div class='card-container'>
             <h4><b>Log in with repl.it</b></h4>
@@ -54,17 +127,21 @@
 
     <br><br>
 
-    <h2 id='safari'>On safari? Get your <a href='/settings'>API Key</a> from another browser and sign in here</h2>
+    <div id='login-box2' class='card container' style='height: fit-content; width: 500px;'>
+        <h2 id='safari'>On safari?</h2>
+        <h3>Get your <a href='/settings'>API Key</a> from another browser and sign in here</h3>
 
-    <form action='/noreplauth' method='POST'>
-        <label for='user'>repl.it username</label>
-        <input name='user'><br>
-        <label for='apik'>API Key</label>
-        <input name='apik'><br><br>
+        <form action='/noreplauth' method='POST'>
+            <label for='user'>repl.it username</label>
+            <input name='user'><br>
+            <label for='apik'>API Key</label>
+            <input name='apik'><br><br>
 
-        <input type='submit'>
-    </form>
+            <input type='submit'>
+        </form>
+    </div>
 
+    <div style='height: 100px; background-color: transparent;' />
 </div>
 </div>
 {% endblock %}

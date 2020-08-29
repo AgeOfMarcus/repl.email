@@ -289,3 +289,7 @@ a {
 .compose-input:hover {
     border-color: rgba(169,169,169,0.4) !important;
 }
+
+#top-nav {
+    height: 72px !important;
+}

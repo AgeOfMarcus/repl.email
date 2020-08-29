@@ -1,7 +1,6 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <script>
-    const user = "{{ user }}";
+	const user = "{{ user }}";
     const token = "{{ token }}";
     const pfp = "{{ pfp }}";
     const isMobile = '{{ isMobile }}' != 'None';
@@ -10,57 +9,208 @@
     globalThis.style = "{{ style }}" || 'modern'; // classic or modern
     globalThis.dateFormat = "{{ dateFormat }}" || 'detailed'; // detailed or simple
     optType = 1;
+    console.log('{{ style }}, {{ dateFormat }}')
 
     // all selected emails ids will be in here
     var selected = [];
 
     // true if chanegs are made false after refresh
-    needChange = false;
+    needChange = true;
+
 </script>
 
-<!-- webmail stylesheet -->
-<link rel='stylesheet' href='/static/webmail2111.css'>
+<!-- load settings into page -->
+<script>
+	function load_settings() {
+    $('#settings-cont').show();
+    $('#display').hide();
+    $('.email-tab').hide();
+    $('.leftpane').hide();
+    $('#search').hide();
 
+    $('#settings-btn-cont').attr("onclick","unload_settings(); hideIfMobile()");
+    $('#settings-btn-cont').html(`<i class="fa fa-long-arrow-left" style="height: 100%; margin:auto; margin-left: 0; margin-right: 15px"></i> Back`);
+
+    $('#page-name').text('Settings');
+
+    $('.leftpane-container').scrollTop(0);
+}
+function unload_settings() {
+    $('#settings-cont').hide();
+    $('.email-tab').show();
+    $('.leftpane').show();
+    $('#no-msgs-cont').hide();
+    $('#search').show();
+
+    $('#settings-btn-cont').attr("onclick","load_settings(); hideIfMobile()");
+    $('#settings-btn-cont').html(`<i class="fa fa-cog" style="height: 100%; margin:auto; margin-left: 0; margin-right: 15px"></i> Settings`);
+
+    $('#page-name').text('Mail');
+
+    $('.leftpane-container').scrollTop(0);
+}
+</script>
+
+<!-- settings style -->
 <style>
-.navbar {
-    min-width: 125px;
-    max-width: 175px;
-}
-
-
-.DELETED fa-circle {
+#settings-cont {
     display: none;
+    height: 100%;
 }
-
-
-.modern-name {
-    width: 35% !important;
+#settings-cont input:focus {
+    border-color: #478ed4 !important;
 }
-.modern-name:hover {
-    overflow: visible;
-    background-color: inherit;
-    width: fit-content !important;
-    min-width: 35% !important;
+.toggle-not-dark {
+    background-color: #34323D !important;
 }
-.modern-name:hover:after {
-    content: '.'; // makes a small space
-    opacity: 0;
-    color: transparent;
+.heading2 {
+    margin: 0 0 .2rem 0 !important;
 }
 </style>
+
+<!-- webmail stylesheet -->
+<link rel='stylesheet' href='/static/webmail31.css'>
+<style>
+	#email-types li, .navbar li {
+        -moz-user-select: none;
+		-khtml-user-select: none;
+		-webkit-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+    }
+
+    .all-container {
+        height: calc(100vh - 72px) !important;
+    }
+</style>
+
+<!-- more dropdown -->
+<style>
+	#more-icon:checked+label::after {
+		display: none !important;
+	}
+
+	#more-icon:checked+label .more-dropdown {
+		display: block !important;
+	}
+
+	.more-dropdown {
+		position: absolute;
+		display: none;
+		width: 220px;
+		height: fit-content;
+		border-radius: 5px;
+		overflow: hidden;
+		box-shadow: 4px 2px 10px 6px rgba(10, 10, 10, 0.3);
+		background-color: #f3f3f3;
+	}
+
+	.more-dropdown ul {
+		padding: 5px 0px 5px 0px;
+		list-style: none;
+		text-align: left;
+		margin-bottom: 0;
+	}
+
+	.more-dropdown ul li {
+		cursor: pointer;
+		padding: 2px 7px 2px 7px;
+
+		-moz-user-select: none;
+		-khtml-user-select: none;
+		-webkit-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+
+	.more-dropdown ul li:hover {
+		background-color: rgba(122, 122, 122, 0.4);
+	}
+</style>
+
+
+<!-- mobile stylesheet__________________________________ -->
+<style>
+@media only screen and (max-width: 700px) {
+    #rest {
+        width: calc(100vw - 5px);
+        padding-left: 5px;
+    }
+    .navbar-container {
+        padding: 0 0 0 0 !important;
+    }
+    .navbar {
+        padding-top: 10px;
+        background-color: rgb(240, 240, 240) !important;
+        position: absolute;
+        z-index: 10000;
+        width: 100vw !important;
+        top: 72px;
+        height: calc(100vh - 72px);
+        padding: 0 0 0 0 !important;
+        max-width: unset !important;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+    .navbar .nav a {
+        display: block;
+        margin: auto;
+        font-size: 28px;
+        height: fit-content;
+        position: relative;
+    }
+    .navbar .nav a i {
+        position: absolute;
+        left: 15%
+    }
+
+    #search {
+        display: none !important;
+    }
+
+    .pin-container label::after {
+        display: none !important;
+    }
+
+    #email-types li:not(:last-child) label {
+        border-right: 1px solid #f3f3f3;
+    }
+    
+    #email-types li label {
+        font-size: 10px;
+    }
+    #email-types input:checked + label {
+        font-size: 15px;
+    }
+
+    #movable {
+        position: absolute !important;
+        width: 100vw !important;
+        height: calc(100vh - 72px) !important;
+        top: 72px;
+        left: 0;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+    #top-nav {
+        z-index: 10000;
+    }
+}
+</style>
+<!-- /mobile stylesheet__________________________________ -->
 
 <!-- the end of emails function -->
 <link href='//fonts.googleapis.com/css?family=Dosis:400,600' rel='stylesheet' type='text/css'>
 <script>
-firstTime = true;
+	firstTime = true
 jQuery(function($) {
-    $('#leftpane').on('scroll', function() {
-        if($(this).scrollTop() + $(this).innerHeight() + 100 >= $(this)[0].scrollHeight) {
-            $('#theEnd').css('display', 'block');
-            if (firstTime) {
+    $('.leftpane-container').on('scroll', function() {
+        if (!$('.loader').is(':visible') && firstTime) {
+            if ($(this).scrollTop() + $(this).innerHeight() + 100 >= $(this)[0].scrollHeight) {
+                $('#theEnd').css('display', 'block');
                 play();
                 firstTime = false;
-            }
+            }    
         }
     })
 });
@@ -89,17 +239,18 @@ function play() {
 			logoRandom = '';
 		}
 
-	}, 500 );
+	}, 250 );
 
 }
+
 </script>
 
 
 <!-- top nav bar -->
 <div id='top-nav' class='nav' style='background-color: #333'>
-    <div style='display: flex'>
-        <a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
-            <i class="fa fa-bars fa-2x"></i>
+	<div style='display: flex'>
+		<a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
+			<i class="fa fa-bars fa-2x"></i>
         </a>
 
         <div style='display: block; padding: 15px 15px; flex: 2 1 auto'>
@@ -112,7 +263,7 @@ function play() {
             <div class='username' style='font-weight: bold; color: #4183c4; margin-left: 15px; font-size: 20px; float: left; cursor: pointer'>
                 <span onclick='window.location.href = "https://repl.it/@{{ user }}"'>{{ user }}</span>
                 <span style='color: grey; cursor: default'> / </span>
-                <span style='color: #f3f3f3; cursor: default'>inbox</span>
+                <span id='page-name' style='color: #f3f3f3; cursor: default'>Mail</span>
             </div>
 
             <!-- search bar -->
@@ -200,147 +351,294 @@ function play() {
     }
 </script>
 
-<div style='display: flex; height: 100%'>
+<div class='all-container'>
+    <div class='navbar-container'>
     <!-- left nav bar -->
-    <ul class='navbar'>
-        <li class='nav'><a onclick='newMessage()'><i class="fa fa-plus" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Compose</a></li>
+    <ul class='navbar' style='display: none'>
+        <li class='nav'><a onclick='newMessage(); hideIfMobile()'><i class="fa fa-plus" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Compose</a></li>
 
-        <li class='nav'><a onclick='refresh()'><i class="fa fa-repeat" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Refresh</a></li>
+        <!-- old settings button pfff gay
+            <li class='nav'><a onclick="window.open('/settings', 'Settings', 'scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=900,height=600,left=100,top=100')"><i class="fa fa-cog" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Settings</a></li>
+        -->
+        <!-- new settings - cool beans :) -->
+        <li class='nav'><a id='settings-btn-cont' onclick="load_settings(); hideIfMobile()"><i class="fa fa-cog" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Settings</a></li>
 
         <li class='nav'><a href='/logout'><i class="fa fa-sign-out" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Logout</a></li>
-
-        <li class='nav'><a href='/settings'><i class="fa fa-cog" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Settings</a></li>
         
         <li class='nav'><a href='/app?action=compose&to=MarcusWeinberger@repl.email; rafrafraf@repl.email&subject=Feedback/Suggestion'><i class="fa fa-envelope" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Feedback</a></li>
 
-        <li id='markAsReadBtn' class='nav' style='display: none'><a onclick='readAllSelected()'>Mark as read</a></li>
-
-        <li id='toggleHTML' class='nav' style='display: none'><a onclick='toggleHTML()'>Toggle HTML/Text</a></li>
+        <li id='toggleHTML' class='nav' style='display: none'><a onclick='toggleHTML(); hideIfMobile()'>Toggle HTML/Text</a></li>
     </ul>
-
+    </div>
+    <script>
+    if (!window.matchMedia("(max-width: 700px)").matches) {
+        $('.navbar').show();
+    }
+    function hideIfMobile() {
+        if (window.matchMedia("(max-width: 700px)").matches) {
+            var nav = document.getElementsByClassName("navbar")[0];
+            nav.style.opacity = '0';
+            nav.style.display = 'none';
+        }
+    }
+    </script>
+    
     <!-- left navbar open close func -->
     <script>
         function toggleNav() {
             var nav = document.getElementsByClassName("navbar")[0];
             if (nav.style.display == 'block' || nav.style.display === '') {
-                nav.style.display = 'none';
+                if (!window.matchMedia("(max-width: 700px)").matches) {
+                    nav.style.display = 'none';
+                }
+                else {
+                    nav.style.opacity = '0';
+                    setTimeout(function() {
+                        nav.style.display = 'none';
+                    }, 200)
+                }
             }
             else {
-                nav.style.display = 'block';
+                if (!window.matchMedia("(max-width: 700px)").matches) {
+                    nav.style.display = 'block';
+                }
+                else {
+                    nav.style.display = 'block';
+                    setTimeout(function() {
+                        nav.style.opacity = '1';
+                    },10)
+                }
             }
         }
     </script>
 
     <div id='rest' style='flex: 5 1 auto'>
         <div id='first' class='flexrow'>
-            <!-- emails list -->
-            <div class='leftpane' id='leftpane'>
-                <!-- email type buttons -->
-                <div style='width: 100%; height: 50px'>
-                    <ul id='email-types'>
-                        <li>
-                            <input onclick='changeType(1);document.getElementById("search").value = ""' type='radio' id='opt1' name='type-opt' checked>
-                            <label for='opt1'>Inbox<span id='inboxCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
-                        </li>
-                        <li>
-                            <input onclick='changeType(2);document.getElementById("search").value = ""' type='radio' id='opt2' name='type-opt'>
-                            <label for='opt2'>Unread<span id='unreadCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
-                        </li>
-                        <li>
-                            <input onclick='changeType(5);document.getElementById("search").value = ""' type='radio' id='opt5' name='type-opt'>
-                            <label for='opt5'>Important<span id='importantCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
-                        </li>
-                        <li>
-                            <input onclick='changeType(3);document.getElementById("search").value = ""' type='radio' id='opt3' name='type-opt'>
-                            <label for='opt3'>Trash<span id='trashCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
-                            
-                        </li>
-                        <li>
-                            <input onclick='changeType(4);document.getElementById("search").value = ""' type='radio' id='opt4' name='type-opt' disabled>
-                            <label for='opt4'>Sent<span id='sentCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
-                        </li>
-                    </ul>
-                </div>
+            <div class='leftpane-container'>
 
-                <!-- no messages -->
-                <div id='no-msgs-cont' class='no-msgs' style='display: none'>
-                    <img src='./static/mail.png' style='width: 70%; height: auto;' />
-                    <div>
-                        <span id='no-msgs-head' style='font-size: 20px; color: #333'>No messages in your inbox, yet!</span>
+                <!-- settings -->
+                <div id='settings-cont'>
+                    <div class='container'>
+                        <h1>Settings</h1>
                         <br>
-                        <span id='no-msgs-body' style='font-size: 14px; color: grey'>Start chatting with coders around you.</span>
+                        <label for='forward'>Forward emails to:</label>
+                        <input name='forward' id='forward'>
+                        <button onclick='saveForward()' style='background-color: #333; border-color: #334'>Save</button>
+                        <br><br>
+                        <!-- theme toggle -->
+                        <input type="checkbox" id="switch" onclick='saveTheme()' style='visibility: hidden'>
+                        <div class="app">
+                            <div class="body">
+                                <div class="content">
+                                    <div class="circle">
+                                    <div class="crescent"></div>
+                                    </div>
+                                    <p class="heading">Choose a display style</p>
+                                    <p style='margin-bottom: 12px'>Pop or subtle. Day or night.<br>
+                                    Customize your interface
+                                    </p>
+                                    <label id='toggle-label' for="switch" style='bacground-color: rgba(0,0,0,.1);'>
+                                    <div class="toggle toggle-not-dark"></div>
+                                    <div class="names">
+                                        <p class="light">Light</p>
+                                        <p class="dark">Dark</p>
+                                    </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- style theme -->
+                        <p class="heading heading2">Choose an email style</p>
+                        <p style='margin-bottom: 0'>Minimal or complex.<br>
+                        Customize your interface
+                        </p>
+                        <input type="checkbox" id="switch1" onclick='' style='visibility: hidden'>
+                        <div class="app">
+                            <div class="body">
+                                <div class="content">
+                                    <label id='toggle-label' for="switch1" style='bacground-color: rgba(0,0,0,.1);'>
+                                    <div class="toggle toggle-not-dark"></div>
+                                    <div class="names">
+                                        <p class="light">Modern</p>
+                                        <p class="dark">Classic</p>
+                                    </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- date format theme -->
+                        <p class="heading heading2">Choose a date format</p>
+                        <p style='margin-bottom: 0'>Minimal or complex.<br>
+                        Customize your interface
+                        </p>
+                        <input type="checkbox" id="switch2" onclick='setDateFormat(this.checked)' style='visibility: hidden'>
+                        <div class="app">
+                            <div class="body">
+                                <div class="content">
+                                    <label id='toggle-label' for="switch2" style='bacground-color: rgba(0,0,0,.1);'>
+                                    <div class="toggle toggle-not-dark"></div>
+                                    <div class="names">
+                                        <p class="light">Simple</p>
+                                        <p class="dark">Detailed</p>
+                                    </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <label for='api_key'><a href='https://pypi.org/project/replemail/'>API Key</a></label>
+                        <input name='api_key' id='api_key' value='{{ api_key }}' readonly>
+                        <button onclick='newAPIKey()' style='background-color: #333; border-color: #334'>Get a new API Key</button>
+                        <div style='height: 200px; background-color: transparent'></div>
+                    </div>
+                </div> 
+                <!-- /settings -->
+
+                <!-- tab thingy -->
+                <div class='email-tab'>
+                    <div class="pin-container" style='position: relative !important; z-index: 1000'>
+                        <input type="checkbox" id="select-all-checkbox" onclick="checkAll(this.checked)" />
+                        <label class='select-email-box' data-title='Select all' for="select-all-checkbox"> </label>
+
+                        <input type="checkbox" id="refresh-icon" onclick="refresh()" />
+                        <label class='pin-cont-refresh' data-title='Refresh' for="refresh-icon"> </label>
+
+                        <input type="checkbox" id="more-icon"  onclick="" />
+                        <label class='pin-cont-more' data-title='More' for="more-icon">
+                            <div class='more-dropdown'>
+                                <ul>
+                                    <li onclick=''>Mark selected as read</li>
+                                    <li>Mark selected as unread</li>
+                                    <li>Delete selected messages</li>
+                                </ul>
+                            </div>
+                        </label>
+                        
                     </div>
                 </div>
+                <!-- check if outside of more button is clicked -->
+                <script>
+                    $(document).click(function(event) {
+                        if ($('#more-icon').is(':checked')) {
+                            var $target = $(event.target);
+                            if(!$target.closest('.email-tab').length && 
+                            $('.more-dropdown').is(":visible")) {
+                                $('#more-icon').prop('checked', false);
+                            }       
+                        }    
+                    });
+                </script>
 
-                <!-- email load animation -->
-                <div class="loader" style='display: none'>
-                    <div class="reverse-spinner"></div>
-                </div>
-
-                <!-- all messages -->
-                <ul class='pane' id='messages'>
-                    
-                </ul>
-
-                <!-- the end text -->
-                <div id='theEnd' style='display: none; margin-bottom: 500px; color: #4183c4'></div>
-            </div>
-
-            <!-- email page -->
-            <div id='display' style='display: none;'>
-                <div style='padding: 15px 15px;'>
-                    <a style='margin-right: 15px'><i class="fa fa-long-arrow-left fa-2x icon-btn" onclick='closeMessage()'></i></a>
-                    <a onclick='replyToMessage()' style='background-color: #333; padding: 5px 12px; border-radius: 15px'><i class='fa fa-reply'></i></a>
-                    
-                    <!-- dropdown menu -->
-                    <div class='dropdown'> 
-                        <i data-title='More' onclick="myFunction()" class="fa fa-ellipsis-h icon-btn"></i>
-                        <ul id='myDropdown' class="dd-menu">
-                            <li onclick='replyToMessage()'><i class='fa fa-reply'></i> Reply</li>
-                            <li onclick='forwardMessage()'>Forward</li>
-                            <li>Mark as unread (!ROAD WORK!)</li>
-                            <li class="divider"></li>
-                            <li onclick='deleteMessage()' style='color: red !important; font-weight: bold'><i class="fa fa-trash" aria-hidden="true"></i> Delete message</li>
+                <!-- emails list -->
+                <div class='leftpane' id='leftpane'>
+                    <!-- email type buttons -->
+                    <div id='email-types-cont' style='width: 100%; height: 50px'>
+                        <ul id='email-types'>
+                            <li>
+                                <input onclick='changeType(1);document.getElementById("search").value = ""' type='radio' id='opt1' name='type-opt' disabled checked>
+                                <label for='opt1'>Inbox<span id='inboxCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                            </li>
+                            <li>
+                                <input onclick='changeType(2);document.getElementById("search").value = ""' type='radio' id='opt2' name='type-opt' disabled>
+                                <label for='opt2'>Unread<span id='unreadCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                            </li>
+                            <li>
+                                <input onclick='changeType(5);document.getElementById("search").value = ""' type='radio' id='opt5' name='type-opt' disabled>
+                                <label for='opt5'>Important<span id='importantCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                            </li>
+                            <li>
+                                <input onclick='changeType(3);document.getElementById("search").value = ""' type='radio' id='opt3' name='type-opt' disabled>
+                                <label for='opt3'>Trash<span id='trashCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                                
+                            </li>
+                            <li>
+                                <input onclick='changeType(4);document.getElementById("search").value = ""' type='radio' id='opt4' name='type-opt' disabled>
+                                <label for='opt4'>Sent<span id='sentCnt' style='color: rgb(181, 181, 181); font-size: 11px;'>( )</span></label>
+                            </li>
                         </ul>
                     </div>
-                    <script>
-                        /* When the user clicks on the button, 
-                        toggle between hiding and showing the dropdown content */
-                        function myFunction() {
-                        document.getElementById("myDropdown").classList.toggle("show");
-                        }
 
-                        // Close the dropdown if the user clicks outside of it
-                        window.onclick = function(event) {
-                        if (!event.target.matches('.icon-btn')) {
-                            var dropdowns = document.getElementsByClassName("dd-menu");
-                            var i;
-                            for (i = 0; i < dropdowns.length; i++) {
-                            var openDropdown = dropdowns[i];
-                            if (openDropdown.classList.contains('show')) {
-                                openDropdown.classList.remove('show');
-                            }
-                            }
-                        }
-                        }
-                    </script>
-
-
-                    <label for='from'>From:</label>
-                    <input name='from' id='from' readonly><br>
-                    <label for='msubject'>Subject:</label>
-                    <input name='msubject' id='msubject' readonly><br>
-                    <label for='mdate'>Date:</label>
-                    <input name='mdate' id='mdate' readonly><br><br>
-                    <input id='mid' hidden>
-
-                    <!-- attachments -->
-                    <div id='attachments'>
-                    
+                    <!-- no messages -->
+                    <div id='no-msgs-cont' class='no-msgs' style='display: none'>
+                        <img src='./static/mail.png' style='width: 70%; height: auto;' />
+                        <div>
+                            <span id='no-msgs-head' style='font-size: 20px; color: #333'>No messages in your inbox, yet!</span>
+                            <br>
+                            <span id='no-msgs-body' style='font-size: 14px; color: grey'>Start chatting with coders around you.</span>
+                        </div>
                     </div>
 
-                    <div id='mtext' style='width: 90%; height: 100%; overflow-wrap: break-word; display: none'></div>
-                    <div id='mhtml' style='width: 90%; height: 100%; overflow-wrap: break-word'></div>
+                    <!-- email load animation -->
+                    <div class="loader" style='display: none'>
+                        <div class="reverse-spinner"></div>
+                    </div>
+
+                    <!-- all messages -->
+                    <ul class='pane' id='messages'>
+                        
+                    </ul>
+
+                    <!-- the end text -->
+                    <div id='theEnd' style='display: none; color: #4183c4'></div>
+
+                    <!-- white space -->
+                    <div style='background-color: transparent; height: 200px;'>
+                    </div>
+                </div>
+            
+                <!-- email page -->
+                <div id='display' style='display: none;'>
+                    <div class="card__corner">
+                        <div class="card__corner-triangle"></div>
+                    </div>
+
+                    <div style='padding: 15px 15px;'>
+                        <a style='margin-right: 15px'><i class="fa fa-long-arrow-left fa-2x icon-btn" onclick='closeMessage()'></i></a>
+                        <a onclick='replyToMessage()' style='background-color: #333; padding: 5px 12px; border-radius: 15px'><i class='fa fa-reply'></i></a>
+                        
+                        <!-- dropdown menu -->
+                        <i data-title='More' onclick="toggleEmailDropdown()" class="fa fa-ellipsis-h icon-btn"></i>
+                    
+                        <div id='email-dropdown-cont' class='more-dropdown' style='left: 120px;'>
+                            <ul>
+                                <li onclick='replyToMessage()'><i class='fa fa-reply'></i> Reply</li>
+                                <li onclick='forwardMessage()'>Forward</li>
+                                <li>Mark as unread</li>
+                                <li class="divider"></li>
+                                <li onclick='deleteMessage()' style='color: red !important; font-weight: bold'><i class="fa fa-trash" aria-hidden="true"></i> Delete message</li>
+                            </ul>
+                        </div>
+                        <script>
+                            /* When the user clicks on the button, 
+                            toggle between hiding and showing the dropdown content */
+                            function toggleEmailDropdown() {
+                                $('#email-dropdown-cont').toggle()
+                            }
+
+                            // Close the dropdown if the user clicks outside of it
+                            window.onclick = function(event) {
+                                if (!event.target.matches('.icon-btn') && !event.target.matches('#email-dropdown-cont')) {
+                                    $('#email-dropdown-cont').hide()
+                                }
+                            }
+                        </script>
+
+
+                        <label for='from'>From:</label>
+                        <input name='from' id='from' readonly><br>
+                        <label for='msubject'>Subject:</label>
+                        <input name='msubject' id='msubject' readonly><br>
+                        <label for='mdate'>Date:</label>
+                        <input name='mdate' id='mdate' readonly><br><br>
+                        <input id='mid' hidden>
+
+                        <!-- attachments -->
+                        <div id='attachments'>
+                        
+                        </div>
+
+                        <div id='mtext' style='width: 90%; height: 100%; overflow-wrap: break-word; display: none'></div>
+                        <div id='mhtml' style='width: 90%; height: 100%; overflow-wrap: break-word'></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -383,15 +681,19 @@ function play() {
         </div>
 
         <div style='height: 20%'>
-        <a class='compose-btn' style='background-color: #333; padding: 5px 12px; border-radius: 10px;' onclick='sendMessage()'>send</a>
-        <a style='color: red !important; font-weight: bold' onclick='hideMessage()'>discard</a>
+        <a class='compose-btn' style='background-color: #333; padding: 5px 12px; border-radius: 10px; float: left' onclick='sendMessage()'>send</a>
+        <a style='background-color: transparent; padding: 5px 12px; border-radius: 10px; color: red !important; font-weight: bold; float: left' onclick='hideMessage()'>discard</a>
+        <a class='compose-btn' style='background-color: #333; padding: 5px 12px; border-radius: 10px; float: right;' onclick='attatchFile()'>Attatch File</a>
+        <br>
         </div>
     </div>
 </div>
 
 <script>
 //Make the DIV element draggagle:
-dragElement(document.getElementById("movable"));
+if (!window.matchMedia("(max-width: 700px)").matches) {
+    dragElement(document.getElementById("movable"));
+}
 
 function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -781,167 +1083,254 @@ function selectThisEmail(id, checked) { // make it do one call for all emails th
 
         selected = selected.filter(function(e) { return e !== newid })
     }
-    //console.log(selected)
-
-    selectedEmails();
 }
 
-function selectedEmails() {
-    if (selected.length > 0) {
-        $('#markAsReadBtn').show();
-    }
-    else {
-        $('#markAsReadBtn').hide();
-    }
+function checkAll(checked) {
+    $('.select-email-box-input','.pin-container').each(function() {
+        if ($(this).parent().is(':visible')) {
+            $(this).prop('checked', checked);
+            selectThisEmail($(this).attr('id'), checked);
+        }
+    })
 }
-
 
 lastRefresh = 0;
 function refresh(show_gif=true, num=-1) {
+    var tm2 = performance.now();
+
     if (lastRefresh === 0) {
         $('.loader').show();
     }
     
-    api('/get', {'num': num}, (emails) => {
-        console.log(lastRefresh, Object.keys(emails).length, lastRefresh === Object.keys(emails).length)
+    $('#refresh-icon').prop('checked', true);
 
+    var tm1 = performance.now();
+    api('/get', {'num': num}, (emails) => {
+        console.log("get request start " + ((performance.now() - tm1) / 1000) + " seconds.")
+
+        //console.log(lastRefresh, Object.keys(emails).length, lastRefresh === Object.keys(emails).length)
         if (lastRefresh !== Object.keys(emails).length || needChange) {
+
+            // fragments will make the append dom elements more efficient as u only append it once to the parent
+            // instead of appending each child to the parent.
+            //var fragment = document.createDocumentFragment();
+            var fragment = $(document.createDocumentFragment());
+
             needChange = false;
-            $('#messages').empty();
+            //$('#messages').empty();
+            document.getElementById('messages').innerHTML = '';
 
             if (show_gif) {
-                $('.loader').show();
+                //$('.loader').show();
+                document.getElementsByClassName('loader')[0].style.display = 'none';
             }
-
 
             globalThis.emails = emails;
 
+            var t0 = performance.now();
+
             var count = 0;
             for (id in emails) {
-                if (emails[id]['flags'].includes('Deleted')) {
-                    api('/delete', {'id':id}, (res) => {
-                        $.notify('DELETED', 'info');
-                    })
-                }
+                //console.log(emails[id]['flags'], id)
+                //if (emails[id]['flags'].includes('Deleted')) {
+                    //api('/delete', {'id':id}, (res) => {
+                        //$.notify('DELETED', 'info');
+                    //})
+                //}
                 
-                //console.log(devDateFormat, devStyle)  
+                //console.log(devDateFormat, devStyle)
                 //console.log(style, dateFormat)  //--------------- OVER HERE
 
-                // simple date
-                var modernDate;
-                if (dateFormat === 'simple') {
-                    // modern date
-                    var temp = emails[id]['date'].split(/[ ,]+/);
-                    modernDate = `${temp[2]} ${temp[1]}, ${temp[3]}`;
-                    modernDate = moment(modernDate, 'll').fromNow();
-                }
-                // detailed date
-                else {
-                    modernDate = emails[id]['date'];
-                }
+                if (!id.includes('1051')) { // Y IS UNDEFINED HUH
 
-                // read/unread
-                var tmpflag = '';
-                for (i in emails[id]['flags']) {
-                    tmpflag += "'" + emails[id]['flags'][i] + "',";
-                }
-                var onclickRead = `readThis(${id}, [${tmpflag}])`;
-                var read = `<i id="${id}circle" class="fa fa-circle"></i>`;
-                if (emails[id]['flags'].includes('Read')) {
-                    onclickRead = '';
-                    read = '';
-                }
+                    var allFlags = emails[id]['flags'];
 
-                // Important
-                var imp = '';
-                if (emails[id]['flags'].includes('Important')) {
-                    imp = 'checked';
-                }
+                    // simple date
+                    var modernDate;
+                    if (dateFormat === 'simple') {
+                        // modern date
+                        var temp = emails[id]['date'].split(/[ ,]+/);
+                        modernDate = `${temp[2]} ${temp[1]}, ${temp[3]}`;
+                        modernDate = moment(modernDate, 'll').fromNow();
+                    }
+                    // detailed date
+                    else {
+                        modernDate = emails[id]['date'];
+                    }
 
-                // pin
-                var div = $(`<li id="${id}li" class="node ${emails[id]["flags"].join(' ')}" style="display: none"></li>`);
+                    // read/unread
+                    var tmpflag = '';
+                    for (i in allFlags) {
+                        tmpflag += "'" + allFlags[i] + "',";
+                    }
+                    var onclickRead = `readThis(${id}, [${tmpflag}])`;
+                    var read = `<i id="${id}circle" class="fa fa-circle"></i>`;
+                    if (allFlags.includes('Read')) {
+                        onclickRead = '';
+                        read = '';
+                    }
 
-                if (emails[id]['flags'].includes('PINNED')) { // PINNED
-                    div.append('<div></div>').html(`
-                    ${read}
-                    <div class="pin-container">
-                        <input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" />
-                        <label class='select-email-box' data-title='Select' for="${id}c"> </label>
+                    // Important
+                    var imp = '';
+                    if (allFlags.includes('Important')) {
+                        imp = 'checked';
+                    }
 
-                        <input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" checked/>
-                        <label data-title='Pin' for="${id}"> </label>
+                    // pin
+                    //var div = $(`<li id="${id}li" class="node ${allFlags.join(' ')}" style="display: none"></li>`);
+                    var div = document.createElement("li");
+                    div.id = `${id}li`;
+                    div.className = `node ${allFlags.join(' ')}`;
+                    div.style.display = 'none';
 
-                        <input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
-                        <label class='important' data-title='Important' for="${id}f"> </label>
-                    </div>
-                    `);
-                }
-                else { // not PINNED
-                    div.append('<div></div>').html(`
-                    ${read}
-                    <div class="pin-container">
-                        <input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" />
-                        <label class='select-email-box' data-title='Select' for="${id}c"> </label>
+                    if (allFlags.includes('PINNED')) { // PINNED
+                        div.innerHTML = `
+                        ${read}
+                        <div class="pin-container">
+                            <input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" class='select-email-box-input' />
+                            <label class='select-email-box' data-title='Select' for="${id}c"> </label>
 
-                        <input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" />
-                        <label data-title='Pin' for="${id}"> </label>
+                            <input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" checked/>
+                            <label data-title='Pin' for="${id}"> </label>
 
-                        <input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
-                        <label class='important' data-title='Important' for="${id}f"> </label>
-                    </div>
-                    `);
-                }       
+                            <input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
+                            <label class='important' data-title='Important' for="${id}f"> </label>
+                        </div>
+                        `;
 
-                // CLASSIC STYLE
-                if (style === 'classic') {
-                    div.append($('<a></a>').html(`From: ${emails[id]['from'].split('<').join('').split('>').join('')}<br>Subject: ${emails[id]['subject']}<br>Date: <span class='date'>${modernDate}</span>`).attr('href', '#').attr('onclick', 'openMessage(' + id.toString() + `);${onclickRead}`)); // fucking jQuery
-                }
+                        //div.append('<div></div>').html(`
+                        //${read}
+                        //<div class="pin-container">
+                            //<input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" class='select-email-box-input' />
+                            //<label class='select-email-box' data-title='Select' for="${id}c"> </label>
 
-                // MODERN STYLE
-                if (style === 'modern') {
-                    div.append($(`<a class="modern-email" onclick="openMessage(${id.toString()});${onclickRead}"></a>`).html(`
-                    <div class='modern-cont'>
-                        <span class='modern-subject'>
-                            ${emails[id]['subject']}
-                        </span>
-                        <span class='modern-date'>
-                            ${modernDate}
-                        </span>
-                    </div>
+                            //<input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" checked/>
+                            //<label data-title='Pin' for="${id}"> </label>
+
+                            //<input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
+                            //<label class='important' data-title='Important' for="${id}f"> </label>
+                        //</div>
+                        //`);
+                    }
+                    else { // not PINNED
+                        div.innerHTML = `
+                        ${read}
+                        <div class="pin-container">
+                            <input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" class='select-email-box-input' />
+                            <label class='select-email-box' data-title='Select' for="${id}c"> </label>
+
+                            <input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" />
+                            <label data-title='Pin' for="${id}"> </label>
+
+                            <input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
+                            <label class='important' data-title='Important' for="${id}f"> </label>
+                        </div>
+                        `
+                        //div.append('<div></div>').html(`
+                        //${read}
+                        //<div class="pin-container">
+                            //<input type="checkbox" id="${id}c" name="favourite${id}" onclick="selectThisEmail(this.id,this.checked)" class='select-email-box-input' />
+                            //<label class='select-email-box' data-title='Select' for="${id}c"> </label>
+
+                            //<input type="checkbox" id="${id}" name="check${id}" onclick="togglePin(this.id,this.checked, emails[id]['flags'])" />
+                            //<label data-title='Pin' for="${id}"> </label>
+
+                            //<input type="checkbox" id="${id}f" name="favourite${id}" onclick="toggleImportant(this.id,this.checked)" ${imp}/>
+                            //<label class='important' data-title='Important' for="${id}f"> </label>
+                        //</div>
+                        //`);
+                    }       
+
+                    // CLASSIC STYLE
+                    if (style === 'classic') {
+                        //div.append($('<a></a>').html(`From: ${emails[id]['from'].split('<').join('').split('>').join('')}<br>Subject: ${emails[id]['subject']}<br>Date: <span class='date'>${modernDate}</span>`).attr('href', '#').attr('onclick', 'openMessage(' + id.toString() + `);${onclickRead}`)); // fucking jQuery
+
+                        div.innerHTML += `
+                        <a class="" onclick="openMessage(${id.toString()});${onclickRead}">
+                            From: ${emails[id]['from'].split('<').join('').split('>').join('')}
+                            <br>
+                            Subject: ${emails[id]['subject']}
+                            <br>
+                            Date: <span class='date'>${modernDate}</span>
+                        </a>`; // havent tested dis yet
+                    }
+
+                    // MODERN STYLE
+                    if (style === 'modern') {
+                        //div.append($(`<a class="modern-email" onclick="openMessage(${id.toString()});${onclickRead}"></a>`).html(`
+                        //<div class='modern-cont'>
+                            //<span class='modern-subject'>
+                                //${emails[id]['subject']}
+                            //</span>
+                            //<span class='modern-date'>
+                               //${modernDate}
+                            //</span>
+                        //</div>
+                        
+                        //<div class='modern-name'>
+                            //${emails[id]['from'].split('<').join('').split('>').join('')}
+                        //</div>
+                        //`));
+
+                        div.innerHTML += `
+                        <a class="modern-email" onclick="openMessage(${id.toString()});${onclickRead}">
+                            <div class='modern-cont'>
+                                <span class='modern-subject'>
+                                    ${emails[id]['subject']}
+                                </span>
+                                <span class='modern-date'>
+                                    ${modernDate}
+                                </span>
+                            </div>
+                            
+                            <div class='modern-name'>
+                                ${emails[id]['from'].split('<').join('').split('>').join('')}
+                            </div>
+                        </a>`
+                    }
+
                     
-                    <div class='modern-name'>
-                        ${emails[id]['from'].split('<').join('').split('>').join('')}
-                    </div>
-                    `));
                 }
-
                 count++;
 
-                $("#messages").prepend(div);
+                //$("#messages").prepend(div);
+                fragment.prepend(div);
 
                 // run this on last iteration
                 if (Object.keys(emails).length === count) {
+                    $("#messages").append(fragment)
+                    console.log("Call to refresh took " + ((performance.now() - t0) / 1000) + " seconds.")
                     changeType();
                 }
             }
 
         }
+        console.log("Emails request took " + ((performance.now() - tm1) / 1000) + " seconds.")
         $.notify('Refreshed', 'info');  
 
         lastRefresh = Object.keys(emails).length;
+
+        $('#refresh-icon').prop('checked', false);
+        
+        console.log("Refresh function took " + ((performance.now() - tm2) / 1000) + " seconds.")
+
+        $('#opt1').removeAttr("disabled");
+        $('#opt2').removeAttr("disabled");
+        $('#opt3').removeAttr("disabled");
+        $('#opt5').removeAttr("disabled");
     })
+
+    
 }
 
 function closeMessage() {
     $('.leftpane')[0].style = 'display: block';
     $('#display')[0].style = 'display: none';
+    $('.email-tab')[0].style = 'display: block';
 
-    
     $('#toggleHTML')[0].style = 'display: none';
 
     areHidden();
-
-    selectedEmails();
 }
 
 function get_attatchments(id) {
@@ -986,9 +1375,8 @@ function openAttatchment(id, i) {
 }
 
 function openMessage(id) {
-    $('#markAsReadBtn').hide();
-
     $('#attachments').empty();
+    $('.email-tab')[0].style = 'display: none';
 
     $('.leftpane')[0].style = 'display: none';
     $('#display')[0].style = 'display: block';
@@ -1066,6 +1454,7 @@ function forwardMessage() {
     
     $('#subject')[0].value = 'FW: ' + prev['subject'];
     $('#body')[0].value = `\n\n\n----------\nOriginal from: ${prev['from']}<br><br><blockquote>${prev['text']}</blockquote>`
+    $('#marked').html(htmlsafe(marked($('#body')[0].value)));
 }
 
 function replyToMessage() {
@@ -1085,6 +1474,7 @@ function replyToMessage() {
     }
 
     $('#body')[0].value = `\n\n\n----------\nReplying to: ${prev['from']}<br><br><blockquote>${prev['text']}</blockquote>`
+    $('#marked').html(htmlsafe(marked($('#body')[0].value)));
 }
 
 function newMessage() {
@@ -1168,6 +1558,33 @@ function toggleHTML() {
     }
 }
 
+function attatchFile() {
+    var input = $(document.createElement('input')).attr('type', 'file');
+    input.click();
+
+    input.on('change', function() {
+        console.log('attatchForm onchange'); //debug
+        if (!(input[0].files.length == 0)) {
+            var reader = new FileReader();
+
+            /*
+            reader.readAsDataURL(input[0].files[0])
+            reader.onloadend = function() {
+                editor.insert(`<a href="${reader.result}">${input[0].files[0].name}</a>`);
+            } */
+
+            
+            reader.readAsBinaryString(input[0].files[0]);
+            reader.onloadend = function() {
+                api('/upload', {'data': btoa(reader.result), 'filename': input[0].files[0].name}, (url) => {
+                    console.log('uploaded:', url) //debug
+                    editor.insert(`<a href="${url['url']}">${input[0].files[0].name}</a>`);
+                })
+            } 
+        }
+    })
+}
+
 function deleteMessage() {
     var id = $('#mid')[0].value;
 
@@ -1206,6 +1623,26 @@ $('#body_').bind('input propertychange', function() {
 })
 */
 
+// https://stackoverflow.com/a/11077016
+function insertAtCursor(myField, myValue) {
+    //IE support
+    if (document.selection) {
+        myField.focus();
+        sel = document.selection.createRange();
+        sel.text = myValue;
+    }
+    //MOZILLA and others
+    else if (myField.selectionStart || myField.selectionStart == '0') {
+        var startPos = myField.selectionStart;
+        var endPos = myField.selectionEnd;
+        myField.value = myField.value.substring(0, startPos)
+            + myValue
+            + myField.value.substring(endPos, myField.value.length);
+    } else {
+        myField.value += myValue;
+    }
+} // -https://stackoverflow.com/a/11077016
+
 var editor = {
     'italics': function() {
         var e = $('#body')[0];
@@ -1220,6 +1657,10 @@ var editor = {
         e.value = e.value.substring(0, s) + '****';
         e.value.substring(e.selectionEnd);
         e.selectionEnd = s + 2;
+    },
+
+    'insert': function(text) {
+        insertAtCursor($('#body')[0], text);
     },
 }
 
@@ -1285,6 +1726,93 @@ if ({{ compose }}) {
     $('#subject')[0].value = '{{ compose_subject }}';
     $('#body')[0].value = '{{ compose_body }}';
     $('#msg_pass')[0].value = '{{ compose_password }}';
+}
+
+</script>
+
+<!-- settings script -->
+<script>
+function api(uri, data, callback) {
+    $.ajax({
+        url: '/api' + uri,
+        type: 'post',
+        data: JSON.stringify(data),
+        headers: {
+            token: token,
+        },
+        contentType: 'application/json',
+        success: callback
+    })
+}
+
+$( function() {
+    api('/settings/forwards', {}, (addr) => {
+        if (addr == 'none') {
+            return
+        }
+        $('#forward')[0].value = addr;
+    })
+    $('#' + globalThis.theme).prop('selected', true);
+})
+
+function newAPIKey() {
+    api('/generate', {}, (key) => {
+        $('#api_key')[0].value = key;
+    })
+}
+
+function saveForward() {
+    var addr = $('#forward')[0].value;
+
+    if (addr == '') {
+        addr = 'none';
+    }
+
+    api('/settings/forwards', {'email': addr}, (res) => {
+        $.notify('Forward address changed to: ' + res, 'success');
+    })
+}
+
+function set_theme(t) {
+    api('/settings/theme', {'theme': t}, (res) => {
+        $.notify('Updated', 'success');
+        globalThis.theme = res;
+    })
+}
+
+function get_theme(c) {
+    api('/settings/theme', {}, (res) => {
+        c(res);
+    })
+}
+
+function saveTheme() {
+    var darkmode = $('#switch')[0].checked;
+    $('body').css({
+        transition: 'all 0.5s'
+    })
+
+    if (darkmode) {
+        set_theme('dark');
+        $("#dark").attr("media", "");
+    }
+    else {
+        set_theme('light');
+        $("#dark").attr("media", "none");
+    }
+}
+
+function setDateFormat(checked) {
+    if (checked) {
+        var style = 'detailed';
+    }
+    else {
+        var style = 'simple';
+    }
+    api('/settings', {'dateFormat': style}, (res) => {
+        $.notify(`Saved: ${style} date format`);
+        console.log(res)
+    })
 }
 
 </script>

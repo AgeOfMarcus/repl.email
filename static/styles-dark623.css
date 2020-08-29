@@ -107,3 +107,41 @@ code {
 .attachment-item:hover {
     background-color: rgba(84, 88, 128, 0.5) !important;
 }
+
+
+.email-tab {
+    background-color: #212939 !important;
+}
+
+#display {
+    background-color: rgba(37,54,85,0.4) !important;
+}
+
+
+.card__corner {
+    background-color: rgba(102, 127, 173, 0.4) !important;
+}
+
+.card__corner .card__corner-triangle {
+    border-color: transparent #0f1728 transparent transparent !important;
+}
+
+
+#compose-cont {
+    background-color: rgb(24, 35, 56) !important
+}
+body {
+    background-color: #0f1728 !important;
+}
+
+#movableheader {
+    background-color: rgb(19, 27, 43) !important
+}
+
+.more-dropdown {
+    background-color: #212939 !important;
+    border: 1px solid rgb(55, 65, 87) !important;
+}
+.more-dropdown ul li:hover {
+    background-color: rgba(32, 53, 92, 0.4) !important;
+}

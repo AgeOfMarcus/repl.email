@@ -4,18 +4,65 @@
 <style>
 
 .navbar {
-    height: inherit
+    height: inherit;
+    min-width: 100px !important;
+    max-width: 150px !important;
+}
+
+.container {
+    max-height: calc(100vh - 72px);
+    overflow-y: scroll;
+    flex: 2 1 auto;
+    max-width: unset !important;
 }
 
 </style>
 
-<div class='nav' style='background-color: #333'>
+<!-- mobile responsive -->
+<style>
+@media only screen and (max-width: 700px) {
+    #login-box2 {
+        max-width: 90%;
+    }
+
+    .navbar {
+        position: absolute;
+        top: 72px;
+        width: 100vw !important;
+        max-width: unset !important;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        background-color: rgb(240, 240, 240);
+        z-index: 9999;
+        padding-top: 10px;
+        height: calc(100vh - 72px);
+    }
+    .navbar .nav {
+        width: 100vw !important;
+    }
+    .navbar .nav a {
+        display: block;
+        margin: auto;
+        font-size: 28px;
+    }
+    .navbar .active {
+        border-right: 0px !important;
+        background-color: rgba(68, 135, 201, 0.2) !important;
+    }
+
+    #logo-cont {
+        margin-left: auto;
+    }
+}
+</style>
+
+<div id='top-nav' class='nav' style='background-color: #333'>
     <div style='display: flex'>
         <a class='nav-btn' onclick='toggleNav()' style='width: fit-content'>
             <i class="fa fa-bars fa-2x"></i>
         </a>
 
-        <div style='display: block; padding: 15px 15px;'>
+        <div id='logo-cont' style='display: block; padding: 15px 15px;'>
             <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
         </div>
     </div>
@@ -35,10 +82,26 @@
     function toggleNav() {
         var nav = document.getElementsByClassName("navbar")[0];
         if (nav.style.display == 'block' || nav.style.display === '') {
-            nav.style.display = 'none';
+            if (!window.matchMedia("(max-width: 700px)").matches) {
+                nav.style.display = 'none';
+            }
+            else {
+                nav.style.opacity = '0';
+                setTimeout(function() {
+                    nav.style.display = 'none';
+                }, 200)
+            }
         }
         else {
-            nav.style.display = 'block';
+            if (!window.matchMedia("(max-width: 700px)").matches) {
+                nav.style.display = 'block';
+            }
+            else {
+                nav.style.display = 'block';
+                setTimeout(function() {
+                    nav.style.opacity = '1';
+                },10)
+            }
         }
     }
 </script>
@@ -53,9 +116,32 @@
     <a href='/__repl'><img src='https://repl.it/badge/github/AgeOfMarcus/AgeOfMarcus'></a>
 
     <br><br>
+    <style>
+        iframe {
+            height: 200px !important;
+            overflow-y: hidden;
+        }
+        #update-checkbox:checked + iframe {
+            height: 700px !important;
 
-    <h2>Updates</h2>
-    <iframe src='https://notes.marcusj.tech/link/repl.email' width="70%" height='500px'></iframe>
+        }
+        #update-checkbox {
+            display: none;
+        }
+        #updates-btn {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #update-label:hover #updates-btn {
+            color: #478ed4 !important;
+        }
+    </style>
+    <label id='update-label' style='cursor: pointer'>
+        <h2 id='updates-btn'>Updates</h2>
+        <input id='update-checkbox' type='checkbox'>
+        <iframe src='https://notes.marcusj.tech/link/repl.email' width="70%" height='200px'></iframe>
+    </label>
+    
 
     <br><br>
 

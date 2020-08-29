@@ -12,10 +12,10 @@ from flask_limiter import Limiter
 
 from lib.db import DB, from_env
 from lib.mail import SMTP, Gmail
-from lib.wrap import get_profile 
+from lib.wrap import get_profile
 
 from google.api_core.exceptions import ResourceExhausted
-import os, uuid
+import os, uuid, requests, io, base64
 
 app = Flask(__name__)
 CORS(app)
@@ -52,6 +52,14 @@ def pfp(username):
         url = get_profile(username, os.getenv('WRAP'))
         PROFILE_PICS[username] = url
         return url
+
+def upload_files(file):
+    files = {
+        '0': (file['filename'], io.BytesIO(base64.b64decode(file['data'])))
+    }
+    return requests.post('https://mediafire-proxy.marcusweinberger.repl.co', data={
+        'key': os.getenv('MF_PROXY')
+    }, files=files).json()['0']
 
 # if gmail wont cooperate: https://accounts.google.com/b/0/DisplayUnlockCaptcha (if acc id is 0)
 
@@ -220,6 +228,13 @@ def app_api_send():
         return jsonify(res.json)
     return NO_AUTH()
 
+@app.route('/api/upload', methods=['POST'])
+def app_upload_file():
+    if api_auth(request, session):
+        file = request.get_json()
+        return jsonify({'url':upload_files(file)})
+    return NO_AUTH()
+
 @app.route('/api/settings', methods=['POST'])
 def app_api_settings():
     if api_auth(request, session):
@@ -316,6 +331,7 @@ def app_api_get():
             return jsonify(data)
         except Exception as e:
             print(e, ':', data)
+            return jsonify({e:data}) # rafi did dis
     return NO_AUTH()
 
 @app.route('/api/get/by/flag', methods=['POST'])
@@ -340,7 +356,7 @@ def app_api_flag():
             id:[('\\' + x) for x in flags] for id,flags in data.items()
         }
         for id in ndata:
-            gmail.client.set_gmail_labels([id], ndata[id])
+            gmail.client.set_gmail_labels(id, ndata[id])
         return 'ok'
     return NO_AUTH()
 
