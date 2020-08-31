@@ -14,6 +14,7 @@ imapclient = "^2.1.0"
 smtp2go = "^2.1.0"
 firebase-admin = "^4.3.0"
 CryptoBaker = "^0.7.1"
+replit = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 

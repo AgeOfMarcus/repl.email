@@ -2,7 +2,12 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from datetime import datetime
-import cryptobaker as cb
+try:
+    import cryptobaker as cb
+except ImportError:
+    import pip
+    pip.main(['install', 'cryptobaker'])
+    import cryptobaker as cb
 import os, json, base64
 
 def from_env(name):

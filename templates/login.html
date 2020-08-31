@@ -79,33 +79,6 @@
     -->
 </ul>
 
-<script>
-    function toggleNav() {
-        var nav = document.getElementsByClassName("navbar")[0];
-        if (nav.style.display == 'block' || nav.style.display === '') {
-            if (!window.matchMedia("(max-width: 700px)").matches) {
-                nav.style.display = 'none';
-            }
-            else {
-                nav.style.opacity = '0';
-                setTimeout(function() {
-                    nav.style.display = 'none';
-                }, 200)
-            }
-        }
-        else {
-            if (!window.matchMedia("(max-width: 700px)").matches) {
-                nav.style.display = 'block';
-            }
-            else {
-                nav.style.display = 'block';
-                setTimeout(function() {
-                    nav.style.opacity = '1';
-                },10)
-            }
-        }
-    }
-</script>
 
 <div class='container'>
     <h1>Login</h1>
@@ -131,17 +104,37 @@
         <h2 id='safari'>On safari?</h2>
         <h3>Get your <a href='/settings'>API Key</a> from another browser and sign in here</h3>
 
-        <form action='/noreplauth' method='POST'>
+        <form action='/noreplauth' method='POST' id='noreplauth_form'>
             <label for='user'>repl.it username</label>
-            <input name='user'><br>
+            <input name='user' id='f_user'><br>
             <label for='apik'>API Key</label>
-            <input name='apik'><br><br>
+            <input name='apik' id='f_apik'><br><br>
 
             <input type='submit'>
         </form>
+        <br>
+
+        <h4>Or scan your QR code</h4>
+        <div style="width: 500px" id="reader"></div>
     </div>
 
     <div style='height: 100px; background-color: transparent;' />
 </div>
 </div>
+<script src='https://web.marcusweinberger.repl.co/scripts/html5qr.js'></script>
+<script>
+
+function onScanSuccess(qrCodeMessage) {
+	var user = qrCodeMessage.split(':')[0];
+    var apik = qrCodeMessage.split(':')[1];
+    $('#f_user')[0].value = user;
+    $('#f_apik')[0].value = apik;
+    $('#noreplauth_form').submit();
+}
+
+var html5QrcodeScanner = new Html5QrcodeScanner(
+	"reader", { fps: 10, qrbox: 250 });
+html5QrcodeScanner.render(onScanSuccess);
+
+</script>
 {% endblock %}

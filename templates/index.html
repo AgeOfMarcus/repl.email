@@ -78,33 +78,6 @@
     -->
 </ul>
 
-<script>
-    function toggleNav() {
-        var nav = document.getElementsByClassName("navbar")[0];
-        if (nav.style.display == 'block' || nav.style.display === '') {
-            if (!window.matchMedia("(max-width: 700px)").matches) {
-                nav.style.display = 'none';
-            }
-            else {
-                nav.style.opacity = '0';
-                setTimeout(function() {
-                    nav.style.display = 'none';
-                }, 200)
-            }
-        }
-        else {
-            if (!window.matchMedia("(max-width: 700px)").matches) {
-                nav.style.display = 'block';
-            }
-            else {
-                nav.style.display = 'block';
-                setTimeout(function() {
-                    nav.style.opacity = '1';
-                },10)
-            }
-        }
-    }
-</script>
 
 <div class='container'>
     <h1>repl.email</h1>

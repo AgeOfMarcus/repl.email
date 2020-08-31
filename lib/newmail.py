@@ -1,8 +1,5 @@
 from smtp2go.core import Smtp2goClient
-from imapclient import IMAPClient
-import email, quopri
-
-# https://stackoverflow.com/questions/2182196/how-do-i-reply-to-an-email-using-the-python-imaplib-and-include-the-original-mes
+import email, quopri, imaplib, re
 
 SMTP = Smtp2goClient
 
@@ -10,49 +7,45 @@ class Gmail(object):
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.client = IMAPClient('imap.gmail.com', use_uid=True, ssl=True)
-        self.client.login(username, password)
-        self.client.select_folder('INBOX')
+        self.reload()
     
     def reload(self):
-        self.client = IMAPClient('imap.gmail.com', use_uid=True, ssl=True)
+        self.client = imaplib.IMAP4_SSL('imap.gmail.com')
         self.client.login(self.username, self.password)
-        self.client.select_folder("INBOX")
-
+        self.client.select('inbox')
     def search(self, term, retry=True):
         try:
-            return self.client.gmail_search(term)
+            status, data = self.client.search(None, 'X-GM-RAW', term)
+            return [*map(int, data[0].decode().split())]
         except Exception as e:
-            print(f'Connection error (search) ({term}):', e)
+            print('Connection error:', e)
             if not retry: return []
             self.reload()
             return self.search(term, retry=False)
     
-    def fields(self, field):
-        ftype = field.get_content_type().split('/')[0]
-        pl = field.get_payload()
-        if type(pl) == bytes:
-            return {ftype:pl.decode(errors="ignore")}
-        elif type(pl) == str:
-            return {ftype:pl}
-        elif type(pl) == list:
-            res = {}
-            for subfield in pl:
-                res.update(self.fields(subfield))
-            return res
-        else:
-            return {ftype:str(pl)}
-    
+    def get_gmail_labels(self, id):
+        _, data = self.client.fetch(str(id), '(X-GM-LABELS)')
+        return re.findall('"(.*?)"', data[0].decode())
+
+    def set_gmail_labels(self, id, labels):
+        old = [*self.get_gmail_labels(id)]
+        if len(old) > 0:
+            self.client.store(str(id), '-X-GM-LABELS', old)
+        for label in labels:
+            _, res = self.client.store(str(id), '+X-GM-LABELS', label)
+        return re.findall('"(.*?)"', res[0].decode())
+
     def get(self, id, retry=True):
         try:
-            data = self.client.fetch(id, ['RFC822'])[id][b'RFC822']
+            typ, res = self.client.fetch(str(id), '(RFC822)')
+            data = res[0][1]
             message = email.message_from_bytes(data)
             res = {
                 'from': quopri.decodestring(message['From']).strip().decode(errors='ignore'),
                 'to': message['To'],
                 'subject': quopri.decodestring(message['Subject']).strip().decode(errors='ignore'),
                 'date': message['Date'],
-                'flags': [x.replace('\\', '') for x in self.client.get_gmail_labels(id)[id]],
+                'flags': [x.replace('\\', '') for x in self.get_gmail_labels(id)],
                 'files': [],
             }
             if message.is_multipart():
@@ -90,7 +83,7 @@ class Gmail(object):
                         res[ctype] = part.get_payload()
             return res
         except Exception as e:
-            print(f'Connection error (get) ({id}):', e)
+            print('Connection error (get):', e)
             if not retry: return {}
             self.reload()
             return self.get(id, retry=False)

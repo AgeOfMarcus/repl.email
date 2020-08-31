@@ -145,3 +145,15 @@ body {
 .more-dropdown ul li:hover {
     background-color: rgba(32, 53, 92, 0.4) !important;
 }
+
+
+.card.container {
+    background-color: rgba(37,54,85,0.4);
+}
+
+
+@media only screen and (max-width: 700px) {
+    .navbar {
+        background-color: #17223b !important
+    }
+}

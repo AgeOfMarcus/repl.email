@@ -10,7 +10,8 @@ from flask_cors import CORS
 from flask_mobility import Mobility
 from flask_limiter import Limiter
 
-from lib.db import DB, from_env
+from replit import db
+#from lib.db import DB, from_env #DB
 from lib.mail import SMTP, Gmail
 from lib.wrap import get_profile
 
@@ -26,12 +27,12 @@ limiter = Limiter(
 )
 app.config['SECRET_KEY'] = os.getenv('SECRET')
 
-store = DB(from_env('CONF'))
+#store = DB(from_env('CONF')) #DB
 smtp = SMTP(os.getenv('API'))
 gmail = Gmail(os.getenv('GMAIL_USER'), os.getenv('GMAIL_PASS'))
 
 try:
-    ALL_USERS = [(u.id + '@repl.email') for u in store.users.get()]
+    ALL_USERS = [(u + '@repl.email') for u in db.keys() if not u == 'forwards']
 except ResourceExhausted:
     ALL_USERS = []
 
@@ -83,9 +84,9 @@ def app_norepl_auth():
     username = request.form['user']
     apik = request.form['apik']
 
-    user = store.get_user(username)
+    user = db.get(username)
     if user:
-        if apik == user.get().get('api_key'):
+        if apik == user.get('api_key'):
             session['user'] = username
             session['token'] = apik
             session['pfp'] = pfp(username)
@@ -100,12 +101,9 @@ def app_auth():
     if not user_id:
         return redirect('/login')
     else:
-        user = store.get_user(user_name)
+        user = db.get(user_name)
         if not user:
-            store.users.document(user_name).set({
-                'created': store.date(),
-                **DEFAULT_SETTINGS,
-            })
+            db[user_name] = DEFAULT_SETTINGS
             smtp.send(
                 'MarcusWeinberger@repl.email',
                 [user_name + '@repl.email'],
@@ -113,24 +111,24 @@ def app_auth():
                 text='Click the toggle HTML button to view this message',
                 html=open('new_user.html','r').read(),
             )
+        user = db.get(user_name)
 
         session['user'] = user_name
         session['token'] = str(uuid.uuid4())
         session['pfp'] = pfp(user_name)
-        session['theme'] = user.get().get('theme')
+        session['theme'] = user.get('theme')
         return redirect('/app')
 
 
 @app.route('/webhooks', methods=['POST'])
 def app_webhooks():
-    doc = store.firestore.collection('forwards').document(request.form.get('rcpt', '').replace('@repl.email', '')).get()
-    if doc.exists and not doc.get('email') == 'none':
-        addr = doc.get('email')
-        if '; ' in addr: addr = addr.split('; ')
-        else: addr = [addr]
+    fw = db.get('forwards', {}).get(request.form['rcpt'], '').replace('@repl.email', '')
+    if not fw == '' or fw == 'none':
+        if '; ' in fw: fw = fw.split('; ')
+        else: fw = [fw]
         smtp.send(
             request.form.get('sender'),
-            addr,
+            fw,
             request.form.get('subject'),
             html='<h1>New Email</h1><h3><a href="https://repl.email/app">Click here to view</a></h3>'
         )
@@ -148,6 +146,8 @@ def app_webmail():
     opts = {
         'compose': str(request.args.get('action') == 'compose').lower(),
         'compose_to': [],
+        'open_settings': str(request.args.get('action') == 'settings').lower(),
+        'dev_mode': str(request.args.get('dev') == 'true').lower()
     }
     if not user:
         return redirect('/login')
@@ -158,7 +158,7 @@ def app_webmail():
         opts['compose_body'] = request.args.get('body', '')
         opts['compose_password'] = request.args.get('password', '')
 
-    return render_template('webmail.html', user=user, token=token, pfp=session.get('pfp'), **store.get_user(user).get().to_dict(), isMobile=request.MOBILE, **opts)
+    return render_template('webmail.html', user=user, token=token, pfp=session.get('pfp'), **db.get(user, {}), isMobile=request.MOBILE, **opts)
 
 @app.route('/redirect')
 def app_redirect():
@@ -170,7 +170,7 @@ def app_settings():
     token = session.get('token')
     if not user:
         return redirect('/login')
-    return render_template('settings.html', user=user, token=token, pfp=session.get('pfp'), **store.get_user(user).get().to_dict(), isMobile=request.MOBILE)
+    return render_template('settings.html', user=user, token=token, pfp=session.get('pfp'), **db.get(user, {}), isMobile=request.MOBILE)
 
 # API
 
@@ -181,7 +181,6 @@ def api_auth(request, session):
         if token == session.get('token'):
             return True
         if token == session.get('api_key'):
-            print('[api]:', session.get('user'))
             return True
     return False
 
@@ -209,7 +208,6 @@ def app_api_sent():
         return jsonify(data)
     return NO_AUTH()
 
-@limiter.limit('100 per day')
 @app.route('/api/send', methods=['POST'])
 def app_api_send():
     if api_auth(request, session):
@@ -238,29 +236,26 @@ def app_upload_file():
 @app.route('/api/settings', methods=['POST'])
 def app_api_settings():
     if api_auth(request, session):
-        user = store.get_user(session['user'])
+        user = db.get(session['user'], {})
         ns = request.get_json().get('settings', {})
-        for k, v in ns.items():
-            if k in SETTINGS:
-                if v in SETTINGS[k]:
-                    user.update({k:v})
-        return jsonify(user.get().to_dict())
+        vs = {k:v for k,v in ns.items() if v in SETTINGS[k]}
+        db[session['user']] = {**user, **vs}
+        return jsonify(db[session['user']])
     return NO_AUTH()
 
 @app.route('/api/generate', methods=['POST'])
 def app_api_generate():
     if api_auth(request, session):
-        user = store.get_user(session['user'])
         newkey = str(uuid.uuid4())
-        user.update({'api_key': newkey})
+        db[session['user']] = {**db[session['user']], 'api_key': newkey}
         return newkey
     return NO_AUTH()
 
 @app.route('/api/key', methods=['POST'])
 def app_api_key():
     if api_auth(request, session):
-        user = store.get_user(session['user'])
-        return user.get().to_dict().get('api_key', 'null')
+        user = db.get(session['user'], {})
+        return user.get('api_key', 'null')
     return NO_AUTH()
 
 @app.route('/api/load', methods=['POST'])
@@ -268,8 +263,8 @@ def app_api_load():
     data = request.get_json()
     user = data['user']
     token = data['token']
-    api_key = store.get_user(user).get().get('api_key')
-    if token == api_key:
+    api_key = db.get(user, {}).get('api_key')
+    if api_key and token == api_key:
         session['user'] = user
         session['token'] = token
         return 'ok'
@@ -280,21 +275,17 @@ def app_api_settings_forwards():
     if api_auth(request, session):
         email = request.get_json().get('email', False)
         if email and email.endswith('@repl.email'): email = False
-        doc = store.firestore.collection('forwards').document(session['user'])
+        fw = db.get('forwards', {}).get(session['user'])
         if email:
-            doc.set({
-                'email': email,
-            })
-            return email
-        if doc.get().exists:
-            return doc.get().get('email')
-        return ''
+            db['forwards'] = {**db['forwards'], session['user']: email}
+        return fw or ''
     return NO_AUTH()
 
+'''
 @app.route('/api/settings/theme', methods=['POST'])
 def app_api_settings_theme():
     if api_auth(request, session):
-        user = store.get_user(session['user'])
+        user = db.get(session['user'], {})
         if (t:=request.get_json().get('theme')):
             if t in ['light', 'dark']:
                 user.set({'theme':t})
@@ -302,6 +293,7 @@ def app_api_settings_theme():
                 return t
         return session.get('theme', 'light')
     return NO_AUTH()
+'''
 
 @app.route('/api/delete', methods=['POST'])
 def app_api_delete():
@@ -332,6 +324,20 @@ def app_api_get():
         except Exception as e:
             print(e, ':', data)
             return jsonify({e:data}) # rafi did dis
+    return NO_AUTH()
+
+@app.route('/api/v2/get', methods=['POST'])
+def apiv2_get():
+    if api_auth(request, session):
+        emails = gmail.search(f'to:{session["user"]}@repl.email')
+        data = request.get_json()
+        emails = emails[data.get('start', 0):data.get('end', -1)]
+        res = {i: gmail.get(i) for i in emails}
+        try:
+            return jsonify(res)
+        except Exception as e:
+            print(e, ':', res)
+            return jsonify({e:res})
     return NO_AUTH()
 
 @app.route('/api/get/by/flag', methods=['POST'])

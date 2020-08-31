@@ -4,14 +4,12 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-
-    <link rel='stylesheet' href='/static/stylesVt81.css'>
+    <!-- MAIN STYLESHEET -->
+    <link rel='stylesheet' href='/static/stylesVt811.css'>
     <!-- toggle -->
     <link rel='stylesheet' href='/static/toggle1121.css'>
     <!-- dark theme -->
-    <link rel='stylesheet' href='/static/styles-dark623.css' media='none' id='dark'>
-
-   
+    <link rel='stylesheet' href='/static/styles-dark631.css' media='none' id='dark'>
 
     <!-- Include Choices CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
@@ -33,13 +31,80 @@
 </head>
 <body onload='setTheme()'>
     <script>
+        // SET USER SETTING
+        function setSetting(key, val) {
+            localStorage.setItem(key, val);
+            setTheme();
+        }
+        // RETRIEVE USER SETTING
+        function getSetting(key) {
+            if (key.includes('theme')) {
+                return localStorage.getItem('theme') || 'light'; // light or dark
+            }
+            if (key.includes('style')) {
+                return localStorage.getItem('style') || 'classic'; // classic or modern
+            }
+            if (key.includes('dateFormat')) {
+                // smaller screens have simple dateformat as default
+                if (window.matchMedia("(max-width: 700px)").matches) {
+                    return localStorage.getItem('dateFormat') || 'simple'; // detailed or simple
+                }
+                else {
+                    return localStorage.getItem('dateFormat') || 'detailed'; // detailed or simple
+                }
+            }
+        }
+        // APPLIES SETTINGS
         function setTheme() {
-            if ('{{ theme }}'.includes('dark')) {
+            // set theme setting
+            if (getSetting('theme').includes('dark')) {
                 $("#dark").attr("media", "");
                 $('#switch').prop('checked', true);
             }
             else {
                 $("#dark").attr("media", "none");
+            }
+            // set style setting
+            if (getSetting('style').includes('classic')) {
+                $('#switch1').prop('checked', true);                
+            }
+            // set dateFormat setting
+            if (getSetting('dateFormat').includes('detailed')) {
+                $('#switch2').prop('checked', true);
+                $('.detailed-date').show();
+                $('.simple-date').hide();
+            }
+            if (getSetting('dateFormat').includes('simple')) {
+                $('.detailed-date').hide();
+                $('.simple-date').show();
+            }
+        }
+
+        // TOGGLE NAV OPEN CLOSE
+        // ON MOBILE APPLY OPACITY WITH TIMEOUT FOR TRANSITION
+        function toggleNav() {
+            var nav = document.getElementsByClassName("navbar")[0];
+            if (nav.style.display == 'block' || nav.style.display === '') {
+                if (!window.matchMedia("(max-width: 700px)").matches) {
+                    nav.style.display = 'none';
+                }
+                else {
+                    nav.style.opacity = '0';
+                    setTimeout(function() {
+                        nav.style.display = 'none';
+                    }, 200)
+                }
+            }
+            else {
+                if (!window.matchMedia("(max-width: 700px)").matches) {
+                    nav.style.display = 'block';
+                }
+                else {
+                    nav.style.display = 'block';
+                    setTimeout(function() {
+                        nav.style.opacity = '1';
+                    },10)
+                }
             }
         }
     </script>

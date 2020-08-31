@@ -293,3 +293,13 @@ a {
 #top-nav {
     height: 72px !important;
 }
+
+
+@media only screen and (max-width: 700px) {
+    .nav-btn {
+        transition: all 0.3s;
+    }
+    .nav-btn:active {
+        background-color: rgba(109, 112, 166, 0.4) !important;
+    }
+}
