@@ -6,7 +6,6 @@ def get_profile(username, apikey):
         'wrapAPIKey': apikey,
         'username': username,
     })
-        print(res.json())
         return res.json()['data']['image'].split('"')[1]
     except Exception as e:
         print('fuck:', e)

@@ -1,6 +1,6 @@
 <head>
     <title>repl.email</title>
-    <meta name="description" content="A free email service exclusive to repl.it users">
+    <meta name="description" content="A free email service exclusive to repl.it users" user-scalable='no'>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.0/milligram.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
-    <link rel="icon" type="image/svg+xml" sizes="48x48" href="/static/mail.png">
+    <link rel="icon" type="image/svg+xml" sizes="48x48" href="/static/mail2-small.png">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -87,6 +87,7 @@
             if (nav.style.display == 'block' || nav.style.display === '') {
                 if (!window.matchMedia("(max-width: 700px)").matches) {
                     nav.style.display = 'none';
+                    nav.style.opacity = '0';
                 }
                 else {
                     nav.style.opacity = '0';
@@ -98,6 +99,7 @@
             else {
                 if (!window.matchMedia("(max-width: 700px)").matches) {
                     nav.style.display = 'block';
+                    nav.style.opacity = '1';
                 }
                 else {
                     nav.style.display = 'block';
@@ -120,4 +122,5 @@
 
     <script async defer src="https://sa.repl.email/latest.js"></script>
     <noscript><img src="https://sa.repl.email/noscript.gif" alt=""/></noscript>
+    <script>window.sa_event=window.sa_event||function(){a=[].slice.call(arguments);sa_event.q?sa_event.q.push(a):sa_event.q=[a]};</script>
 </body>

@@ -7,6 +7,7 @@
     const pfp = "{{ pfp }}";
     const isMobile = '{{ isMobile }}' != 'None';
     var dev_mode = {{ dev_mode }};
+    var drafts = localStorage.getItem('drafts') || [];
 
     // opt type is the option type for emails e.g. inbox/unread/important etc
     optType = 1;
@@ -25,7 +26,7 @@
 <!-- youve reached the end animation link -->
 <link href='//fonts.googleapis.com/css?family=Dosis:400,600' rel='stylesheet' type='text/css'>
 <!-- WEBMAIL STYLESHEET LINK -->
-<link rel='stylesheet' href='/static/webmail3111.css'>
+<link rel='stylesheet' href='/static/webmail4.css'>
 
 <!-- WEBMAIL STYLESHEET -->
 <style>
@@ -52,12 +53,48 @@
     width: 125px !important;
 }
 
+
+#display {
+    min-height: calc(95vh - 72px);
+}
+
+
+.SENT i.fa-circle {
+    display: none !important
+}
+
+/* 
+this meant to be after all pinned says pinned ^^
+(important for mobile cos pin button hidden
+
+.pane li.PINNED:last-child + li:after {
+    position: relative;
+    width: inherit;
+    content: 'pinned ^';
+}
+*/
+
+/* not redy for dis yet lmao - make it all fixed pos
+#top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+}
+.all-container {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    width: 100vw;
+}
+*/
+
 /* SETTINGS STYLES */
 #settings-cont {
     display: none;
     height: 100%;
 }
-#settings-cont input:focus {
+#settings-cont input:focus, #send_at:focus {
     border-color: #478ed4 !important;
 }
 .toggle-not-dark {
@@ -69,6 +106,12 @@
 /* /SETTINGS STYLES */
 </style>
 <!-- WEBMAIL STYLESHEET/ -->
+
+<style>
+#movable {
+    min-height: 555px !important;
+}
+</style>
 
 <!-- mobile stylesheet__________________________________ -->
 <style>
@@ -143,7 +186,7 @@
 
 
     .pin-container {
-        left: 0 !important;
+        top: 50% !important;
     }
     .pin-container input[type='checkbox'] + label:before {
         font-size: 18px !important;
@@ -160,10 +203,34 @@
         top: 45% !important;
     }
 
-
     .node a {
         overflow: hidden !important;
         text-overflow: ellipsis;
+        padding: 8px 20px 8px 60px !important;
+    }
+
+    /* hide pin and important icons */
+    .pin-container label:not(:first-of-type):not(.pin-cont-refresh):not(.pin-cont-more) {
+        display: none;
+    }
+    .pin-container label:first-of-type:before {
+        font-size: 27px;
+    }
+
+    .ticker-wrapper {
+        display: none !important;
+    }
+
+    .modern-cont {
+        right: 4% !important;
+        width: 40% !important;
+    }
+
+
+
+    #no-msgs-logo {
+        width: 80vw !important;
+        max-width: unset !important;
     }
 }
 </style>
@@ -179,7 +246,7 @@
 
         <div style='display: block; padding: 15px 15px; flex: 2 1 auto'>
             <!-- LOGO -->
-            <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
+            <img class='nav-image' src='./static/mail2-small.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
             <!-- PFP -->
             <div class='nav-image' style='overflow: hidden; border-radius: 50%; width: 35px; height: 35px; margin-left: 15px;  float: left;'>
                 <img src='{{ pfp }}' style='width: 35px; height: auto; cursor: pointer' onclick='window.location.href = "https://repl.it/@{{ user }}"'' />
@@ -194,7 +261,7 @@
 
             <!-- search bar -->
             <div style='float: left; width: 40%; margin-left: 20px'>
-                <input type='search' id='search' style='transition: all 0.5s' placeholder='Search mail' oninput='change()'></input>
+                <input type='search' id='search' style='transition: all 0.5s' placeholder='Search Mail' oninput='change()'></input>
             </div>
         </div>
     </div>
@@ -216,6 +283,13 @@
             <li class='nav'><a href='/app?action=compose&to=MarcusWeinberger@repl.email; rafrafraf@repl.email&subject=Feedback/Suggestion'><i class="fa fa-envelope" style='height: 100%; margin:auto; margin-left: 0; margin-right: 15px'></i> Feedback</a></li>
             <!-- TOGGLE HTML BUTTON -->
             <li id='toggleHTML' class='nav' style='display: none'><a onclick='toggleHTML(); hideIfMobile()'>Toggle HTML/Text</a></li>
+
+            <!-- AD SPACE -->
+            <li id='ad_1' class='nav' style='display: none'>
+                <a href='https://repl.email/app?action=compose&to=MarcusWeinberger@repl.email&subject=Advertisement&body=Include either your budget or why you think you deserve free advertisement'>
+                    <img src='/static/ad_placeholder.png'/>
+                </a>
+            </li>
         </ul>
     </div>
     <!-- LEFT NAV CSS FOR SCREENS WIDTH <= 700PX -->
@@ -246,6 +320,12 @@
                         <label for='forward'>Forward emails to:</label>
                         <input name='forward' id='forward'>
                         <button onclick='saveForward()' style='background-color: #333; border-color: #334'>Save</button>
+                        <br><br>
+
+                        <!-- EMAIL SIGNATURE SETTING -->
+                        <label for='signature'>Sign emails with:</label>
+                        <input name='signature' id='signature'>
+                        <button onclick='saveSignature()' style='background-color: #333; border-color: #334'>Save</button>
                         <br><br>
 
                         <!-- theme toggle -->
@@ -315,9 +395,10 @@
                         <label for='api_key'><a href='https://pypi.org/project/replemail/'>API Key</a></label>
                         <input name='api_key' id='api_key' value='{{ api_key }}' readonly>
                         <button onclick='newAPIKey()' style='background-color: #333; border-color: #334'>Get a new API Key</button>
-                        <div style='height: 200px; background-color: transparent'></div>
+                        <br><br>
                         <!-- QR LOGIN CODE -->
-                        <div id='qrcode' style='border: white 2px solid'></div>
+                        <h2>QR Login Code</h2><br>
+                        <div id='qrcode' style='border: white 2px solid; width: 256px; height: 256px; margin-left: auto; margin-right: auto;'></div>
                         <div style='height: 200px; background-color: transparent'></div>
                     </div>
                 </div> 
@@ -340,9 +421,9 @@
                             <!-- MORE DROPDOWN LIST -->
                             <div class='more-dropdown'>
                                 <ul>
-                                    <li onclick=''>Mark selected as read</li>
+                                    <li onclick='readSelected()'>Mark selected as read</li>
                                     <li onclick='unreadSelected()'>Mark selected as unread</li>
-                                    <li>Delete selected messages</li>
+                                    <li onclick='deleteSelected()'>Delete selected messages</li>
                                 </ul>
                             </div>
                         </label>
@@ -399,7 +480,7 @@
                     <!-- showed when no messages -->
                     <div id='no-msgs-cont' class='no-msgs' style='display: none'>
                         <!-- LOGO -->
-                        <img src='./static/mail.png' style='width: 70%; height: auto;' />
+                        <img id='no-msgs-logo' src='./static/mail2-new.png' style='width: 70%; height: auto; max-width: 400px;' />
                         <!-- NO MSGS TEXT -->
                         <div>
                             <span id='no-msgs-head' style='font-size: 20px; color: #333'>No messages in your inbox, yet!</span>
@@ -447,7 +528,8 @@
                                 <li onclick='forwardMessage()'>Forward</li>
                                 <li onclick="unreadThis($('#mid')[0].value)">Mark as unread</li>
                                 <li class="divider"></li>
-                                <li onclick='deleteMessage()' style='color: red !important; font-weight: bold'><i class="fa fa-trash" aria-hidden="true"></i> Delete message</li>
+                                <li onclick='deleteMessage()' style='color: red !important; font-weight: bold' id='deleteMessageButton'><i class="fa fa-trash" aria-hidden="true"></i> Delete message</li>
+                                <li onclick='deleteForever()' style='color: red !important; font-weight: bold; display: none' id='deleteForeverButton'><i class="fa fa-trash" aria-hidden="true"></i> Delete forever</li>
                             </ul>
                         </div>
                         <script>
@@ -472,7 +554,9 @@
                         <label for='msubject'>Subject:</label>
                         <input name='msubject' id='msubject' readonly><br>
                         <label for='mdate'>Date:</label>
-                        <input name='mdate' id='mdate' readonly><br><br>
+                        <input name='mdate' id='mdate' readonly><br>
+                        <label for='tracking' id='opened'>Tracking:</label>
+                        <span id='tracking'></span><br><br>
                         <input id='mid' hidden>
 
                         <!-- ATTACHMENTS -->
@@ -497,7 +581,7 @@
     <!-- DRAGGABLE TOP -->
     <div id='movableheader' style='width: 100%; height: 40px; background-color: #333; cursor: move; padding: 10px 10px; color: #f3f3f3; font-weight: bold; z-index: 9999; position: relative;'><a style='font-size: 14px; cursor: move;'>New Message</a><a style='position: absolute; right: 10' onclick='hideMessage()'><i class="fa fa-times icon-btn"></i></a></div>
     <!-- COMPOSE BOX INPUTS WRAPPER -->
-    <div id='compose-cont' style='padding: 10px 10px; z-index: 9999; position: relative'>
+    <div id='compose-cont' style='padding: 0px 10px; z-index: 9999; position: relative'>
         <div class='ui-widget' id='compose' style='height: 80%'>
             <!-- ----------------TO INPUT BOX ---------------- -->
             <input id="to" type="text" value='' placeholder="Enter something">
@@ -523,11 +607,29 @@
             <!-- TEXT -->
             <div style='display: flex; flex-direction: column; height: inherit'>
                 <!-- TEXT INPUT -->
-                <textarea id='body' style='width: 100%; height: 50%; resize: none; border-color: transparent !important;' autocomplete="off"></textarea>
+                <textarea id='body' style='width: 100%; height: 100%; resize: none; border: 1px solid rgba(129, 132, 166, 0.5); border-top: 0px;' autocomplete="off"></textarea>
+
+                <!-- PREVIEW BUTTON -->
+                <a class='compose-btn' style='background-color: #333; padding: 5px 12px; border-radius: 10px;' onclick="togglePreview()">preview</a>
+
                 <!-- TEXT HTML RENDERED -->
-                <div id='marked' data-placeholder='Text you type will be rendered as markdown here.' style='width: 100%; height: 50%; overflow-y: scroll; border: 1px solid rgba(129, 132, 166, 0.5)'></div>
+                <div id='marked' data-placeholder='Text you type will be rendered as markdown here.' style='display: none; width: 100%; height: 35%; overflow-y: scroll; border: 1px solid rgba(129, 132, 166, 0.5); border-top: 0px;'></div>
+                <!-- SEND DATE (SCHEDULE) -->
+                <label for='send_at'>Schedule:</label>
+                <input type='datetime-local' id='send_at' name='send_at'>
             </div>
         </div>
+        <script>
+            function togglePreview() {
+                $('#marked').toggle();
+                if ($('#marked').is(':visible')) {
+                    $('#body').height('30%');
+                }
+                else {
+                    $('#body').height('100%');
+                }
+            }
+        </script>
 
         <div style='height: 20%'>
             <!-- SEND BUTTON -->
@@ -572,7 +674,7 @@
 <script src='https://web.marcusweinberger.repl.co/scripts/qr.js'></script>
 <script>
 
-refreshQRCode = () => { new QRCode('qrcode', user + ':' + $('#api_key')[0].value) };
+refreshQRCode = () => { $('#qrcode').empty(); new QRCode('qrcode', 'https://repl.email/login?k=' + btoa(user + ':' + $('#api_key')[0].value)) };
 refreshQRCode();
 
 /*
@@ -724,7 +826,7 @@ function search() {
     $('li','#messages').each(function() {
         // inbox
         if (optType === 1) {
-            if (!$(this).attr('class').includes('DELETED')) {
+            if (!$(this).attr('class').includes('DELETED') && !$(this).attr('class').includes('SENT')) {
                 if ($(this).text().toUpperCase().indexOf(filter) > -1) {
                     $(this).css("display", "block");
                 }
@@ -735,7 +837,7 @@ function search() {
         }
         // UNREAD
         if (optType === 2) {
-            if (!$(this).attr('class').includes('Read')) {
+            if (!$(this).attr('class').includes('READ') && !$(this).attr('class').includes('SENT')) {
                 if ($(this).text().toUpperCase().indexOf(filter) > -1) {
                     $(this).css("display", "block");
                 }
@@ -760,7 +862,7 @@ function search() {
         }
         // Important
         if (optType === 5) {
-            if ($(this).attr('class').includes('Important')) {
+            if ($(this).attr('class').includes('IMPORTANT')) {
                 if ($(this).text().toUpperCase().indexOf(filter) > -1) {
                     $(this).css("display", "block");
                 }
@@ -774,7 +876,14 @@ function search() {
         }
         // sent
         if (optType === 4) {
-        
+            if ($(this).attr('class').includes('SENT')) {
+                if ($(this).text().toUpperCase().indexOf(filter) > -1) {
+                    $(this).css("display", "block");
+                }
+                else {
+                    $(this).css("display", "none");
+                }
+            }
         }
     })
 
@@ -824,15 +933,30 @@ function api(uri, data, callback) {
     })
 }
 
-$( function() { //---------"WHAT DIS DO LMAO" -rafrafraf
+function fix_api() {
+    api('/relog', {}, (res) => {
+        console.log(res);
+        refresh();
+    })
+}
+
+$(function() {
+    api('/settings/signature', {}, (sig) => {
+        $('#signature')[0].value = sig;
+    })
+})
+
+/*
+$( function() { //---------"WHAT DIS DO LMAO" -rafrafraf -> this was used for creating the autocomplete feature, right now it does nothing
     api('/contacts', {}, (res) => {
         $('#to').autocomplete({
             source: res['contacts']
         })
     })
 })
+*/
 
-function get_by_flag(flag, num=-1) { // ---WHEN DO WE EVEN USE DIS LOL
+function get_by_flag(flag, num=-1) { // ---WHEN DO WE EVEN USE DIS LOL -> we dont, i was gonna implement it so we could only load the deleted emails when clicked on but ignore it
     api('/get/by/flag', {
         'flag': flag,
         'num': num,
@@ -841,19 +965,13 @@ function get_by_flag(flag, num=-1) { // ---WHEN DO WE EVEN USE DIS LOL
     })
 }
 
-function delete_forever(id) { //-----------NOT IMPLEMENTED I THINK
-    api('/delete/forever', {'id':id}, (res) => {
+function delete_forever(id_list) { //-----------NOT IMPLEMENTED I THINK -> it is in the server
+    api('/delete/forever', {'ids':id_list}, (res) => {
         $.notify('Deleted', 'success');
     })
 }
 
-function get_sent() { // ---------------------DONT WORK
-    api('/sent', {}, (res) => {
-        globalThis.sent_emails = res;
-    })
-}
-
-function set_flags_dict(dict, notif=true) { // ---------DOESNT WORK
+function set_flags_dict(dict, notif=true) { // ---------DOESNT WORK -> should do, pass in a dict like this {id: ['SEEN', 'DELETED']}
     api('/flag', dict, (res) => {
         if (notif) {
             $.notify('Updated', 'success');
@@ -890,16 +1008,19 @@ function get_profile(username) {
     }
 }
 
+//readThis
 // counts number of emails in each opt type, then displays number on opt buttons
 function countEmails() {
     // inbox
-    $('#inboxCnt').text(`(${$('#messages li:not(.DELETED)').length})`);
+    $('#inboxCnt').text(`(${$('#messages li:not(.DELETED):not(.SENT)').length})`);
     // unread
-    $('#unreadCnt').text(`(${$('#messages li:not(.DELETED) i.fa-circle:visible').length})`);
+    $('#unreadCnt').text(`(${$('#messages li:not(.DELETED):not(.READ):not(.SENT)').length})`);
     // important
-    $('#importantCnt').text(`(${$('#messages li.Important').length})`);
+    $('#importantCnt').text(`(${$('#messages li.IMPORTANT').length})`);
     // trash
     $('#trashCnt').text(`(${$('#messages li.DELETED').length})`);
+    // sent
+    $('#sentCnt').text(`(${$('#messages li.SENT').length})`);
 }
 
 // shows/hides emails in pane based on optType 
@@ -911,7 +1032,7 @@ function changeType(to=optType) { // called when opt button pressed
     $('li','#messages').each(function() {
         // inbox
         if (optType === 1) {
-            if ($(this).attr('class').includes('DELETED')) {
+            if ($(this).attr('class').includes('DELETED') || $(this).attr('class').includes('SENT')) {
                 $(this).css("display", "none");
             }
             else {
@@ -920,13 +1041,13 @@ function changeType(to=optType) { // called when opt button pressed
         }
         // UNREAD
         if (optType === 2) {
-            if ($(this).attr('class').includes('Read')) {
+            if ($(this).attr('class').includes('READ')) {
                 $(this).css("display", "none");
             }
             else {
                 $(this).css("display", "block");
             }
-            if ($(this).attr('class').includes('DELETED')) {
+            if ($(this).attr('class').includes('DELETED') || $(this).attr('class').includes('SENT')) {
                 $(this).css("display", "none");
             }
         }
@@ -941,7 +1062,7 @@ function changeType(to=optType) { // called when opt button pressed
         }
         // Important
         if (optType === 5) {
-            if (!$(this).attr('class').includes('Important')) {
+            if (!$(this).attr('class').includes('IMPORTANT')) {
                 $(this).css("display", "none");
             }
             else {
@@ -953,7 +1074,12 @@ function changeType(to=optType) { // called when opt button pressed
         }
         // sent
         if (optType === 4) {
-            
+            if (!$(this).attr('class').includes('SENT')) {
+                $(this).css("display", "none");
+            }
+            else {
+                $(this).css("display", "block");
+            }
         }
     });
 
@@ -1002,22 +1128,22 @@ function toggleImportant(id, checked) {
     var flags = emails[newid]['flags'];
     if (!flags.includes('DELETED')) {
         if (checked) {
-            if (!flags.includes('Important')) {
-                flags.push('Important');
+            if (!flags.includes('IMPORTANT')) {
+                flags.push('IMPORTANT');
             }
             
             set_flags(parseInt(newid), flags);
 
-            $(`#${newid}li`).addClass('Important');
+            $(`#${newid}li`).addClass('IMPORTANT');
         }
         else {
-            if (flags.includes('Important')) {
-                flags.splice(flags.indexOf('Important'), 1);
+            if (flags.includes('IMPORTANT')) {
+                flags.splice(flags.indexOf('IMPORTANT'), 1);
             }
 
             set_flags(parseInt(newid), flags);
 
-            $(`#${newid}li`).removeClass('Important');
+            $(`#${newid}li`).removeClass('IMPORTANT');
         }    
     }
 }
@@ -1044,13 +1170,13 @@ function pinToTop() {
 // read email (single) P.S. called when opening email
 function readThis(id, flags, notif=true) { // marks email as read
     if (!flags.includes('DELETED')) {
-        if (!flags.includes('Read')) {
+        if (!flags.includes('READ') && !flags.includes('SENT')) {
             flags.push('READ');
-        }
-        
-        set_flags(parseInt(id), flags, notif);
+            
+            set_flags(parseInt(id), flags, notif);
 
-        $(`#${id}circle`).hide();
+            $(`#${id}circle`).hide();
+        } 
     }
 }
 
@@ -1064,31 +1190,55 @@ function unreadThis(id, notif=true) {
     console.log(id, currentflags)
 
     if (!currentflags.includes('DELETED')) {
-        if (currentflags.includes('Read')) {
-            currentflags.splice(currentflags.indexOf('Read'), 1);
+        if (currentflags.includes('READ')) {
+            currentflags.splice(currentflags.indexOf('READ'), 1);
         }
         
         set_flags(parseInt(id), currentflags, notif);
 
         $(`#${id}circle`).show();
 
-        $(`#${id}li`).removeClass('Read');
+        $(`#${id}li`).removeClass('READ');
     }
 }
 
-function unreadSelected() { // --------------------UNFINISHED
-    //if (selected.length > 0) {
-        //var dict1 = {};
-        //for (x=0; x<selected.length; x++) {
-            //dict1[selected[x]] = globalThis.emails[selected[x]]['flags'];
-            //$(`#${selected[x]}circle`).show();
+function readSelected() {
+    if (selected.length > 0) {
+        api('/flag/add', {
+            'ids': selected,
+            'flag': 'READ',
+        }, (res) => {
+            console.log(res);
+            $.notify('Updated', 'info');
+            refresh()
+        })
+    }
+}
 
-            //$(`#${selected[x]}li`).removeClass('Read');
-        //}
-        //console.log(dict1);
+function deleteSelected() {
+    if (selected.length > 0) {
+        api('/flag/add', {
+            'ids': selected,
+            'flag': 'DELETED',
+        }, (res) => {
+            console.log(res);
+            $.notify('Deleted', 'info');
+            refresh()
+        })
+    }
+}
 
-        //set_flags_dict(dict1);    
-    //}
+function unreadSelected() {
+    if (selected.length > 0) {
+        api('/flag/remove', {
+            'ids': selected,
+            'flag': 'READ',
+        }, (res) => {
+            console.log(res);
+            $.notify('Updated', 'info');
+            refresh()
+        })
+    }
 }
 
 // select/unselect email element
@@ -1103,7 +1253,7 @@ function selectThisEmail(id, checked) {
     else {
         $(`#${newid}li`).removeClass('selected');
 
-        selected = selected.filter(function(e) { return e !== newid })
+        globalThis.selected = selected.filter(function(e) { return e !== parseInt(newid) })
     }
 }
 
@@ -1148,7 +1298,7 @@ function makeEmails(emails, show_gif=true) {
             // check if email id returns a valid value before making email element
             var goAhead = false;
             try {
-                emails[id]['flags'].includes('read');
+                emails[id]['flags'].includes('READ');
 
                 goAhead = true;
             }
@@ -1172,6 +1322,15 @@ function makeEmails(emails, show_gif=true) {
                     var mo1 = '';
                 }
 
+                console.log(allFlags)
+                var sentFrom = 'From: ';
+                var toOrFrom = emails[id]['from'].split('<').join('').split('>').join('');
+                if (allFlags.includes('SENT')) {
+                    console.log(emails[id]['to'])
+                    sentFrom = 'To: ';
+                    toOrFrom = emails[id]['to'][0];
+                }
+
                 // read/unread
                 var tmpflag = '';
                 for (i in allFlags) {
@@ -1179,14 +1338,14 @@ function makeEmails(emails, show_gif=true) {
                 }
                 var onclickRead = `readThis(${id}, [${tmpflag}])`;
                 var read = `<i id="${id}circle" class="fa fa-circle"></i>`;
-                if (allFlags.includes('Read')) {
+                if (allFlags.includes('READ')) {
                     //onclickRead = '';
                     read = `<i id="${id}circle" class="fa fa-circle" style='display: none'></i>`;
                 }
 
                 // Important
                 var imp = '';
-                if (allFlags.includes('Important')) {
+                if (allFlags.includes('IMPORTANT')) {
                     imp = 'checked';
                 }
 
@@ -1231,8 +1390,8 @@ function makeEmails(emails, show_gif=true) {
                 // CLASSIC STYLE
                 if (getSetting('style').includes('classic')) {
                     div.innerHTML += `
-                    <a class="" style='padding: 8px 15px 8px 100px !important' onclick="openMessage(${id.toString()});${onclickRead}">
-                        <span class='email-titles'>From: </span>${emails[id]['from'].split('<').join('').split('>').join('')}
+                    <a class="" style='' onclick="openMessage(${id.toString()});${onclickRead}">
+                        <span class='email-titles'>${sentFrom}</span>${toOrFrom}
                         <br>
                         <span class='email-titles'>Subject: </span>${emails[id]['subject']}
                         <br>
@@ -1255,7 +1414,7 @@ function makeEmails(emails, show_gif=true) {
                         </div>
                         
                         <div class='modern-name'>
-                            ${emails[id]['from'].split('<').join('').split('>').join('')}
+                            ${toOrFrom}
                         </div>
                     </a>`
                 }
@@ -1279,7 +1438,7 @@ function makeEmails(emails, show_gif=true) {
 }
 
 // get request for emails(messages) and call to makeEmails func
-function refresh(show_gif=true, num=-1) {
+function refresh(show_gif=true, num=-1, r='/get') {
     if (lastRefresh === 0) {
         $('.loader').show();
     }
@@ -1287,11 +1446,15 @@ function refresh(show_gif=true, num=-1) {
     $('#refresh-icon').prop('checked', true);
 
     var tm1 = performance.now();
-    api('/get', {'num': num}, (emails) => {
-        makeEmails(emails, show_gif);
+    api(r, {'num': num}, (emails) => {
+
+        api('/sent', {}, (emails2) => {
+            var newdict = Object.assign({}, emails, emails2)
+            makeEmails(newdict, show_gif);
+            $.notify('Refreshed', 'info');  
+        })
 
         console.log("Emails request took " + ((performance.now() - tm1) / 1000) + " seconds.")
-        $.notify('Refreshed', 'info');  
 
         // lastrefresh is length of emails from most recent get request
         lastRefresh = Object.keys(emails).length;
@@ -1304,6 +1467,7 @@ function refresh(show_gif=true, num=-1) {
         $('#opt2').removeAttr("disabled");
         $('#opt3').removeAttr("disabled");
         $('#opt5').removeAttr("disabled");
+        $('#opt4').removeAttr("disabled");
     })
 }
 
@@ -1361,6 +1525,22 @@ function openAttatchment(id, i) {
     openBase64InNewTab(a['data'], a['filetype']);
 }
 
+function deleteForever() {
+    var id = $('#mid')[0].value;
+
+    if (!confirm('Are you sure you want to delete this message? This cannot be undone.')) {
+        return;
+    }
+
+    if (id) {
+        api('/delete/forever', {'ids': [id]}, (res) => {
+            console.log(res);
+            $.notify('Deleted', 'info');
+            refresh();
+        })
+    }
+}
+
 function openMessage(id) {
     $('#attachments').empty();
     $('.email-tab')[0].style = 'display: none';
@@ -1383,6 +1563,14 @@ function openMessage(id) {
         $('#mhtml').append($('<iframe></iframe>').attr('src', 'data:text/html;charset=utf-8,' + email['html']));
     } else {
         $('#mhtml')[0].innerHTML = htmlsafe(email['html']);
+    }
+
+    if (email['flags'].includes('DELETED')) {
+        $('#deleteMessageButton').html('<i class="fa fa-trash" aria-hidden="true"></i> Restore message').attr('onclick', 'restoreMessage()');
+        $('#deleteForeverButton').attr('style', 'color: red !important; font-weight: bold');
+    } else {
+        $('#deleteMessageButton').html('<i class="fa fa-trash" aria-hidden="true"></i> Delete message').attr('onclick', 'deleteMessage()');
+        $('#deleteForeverButton').attr('style', 'color: red !important; font-weight: bold; display: none');
     }
 
     var ats = emails[id]['files'];
@@ -1426,6 +1614,20 @@ function openMessage(id) {
         }).removeAttr('href').text('🔒 Password Protected Content 🔒');
     }
 
+    if (email['flags'].includes('SENT')) {
+        var tracker = $('#mhtml').find('#tracking');
+        if (tracker.length > 0) {
+            var i = tracker[0].src.split('.png')[0].split('/')[-1];
+            api('/tracking', {'id': i}, (res) => {
+                $('#opened').attr('style', '');
+                $('#tracking').text(res['status'].toString());
+            })
+        }
+    } else {
+        $('#opened').attr('style', 'display: none;');
+        $('#tracking').text('');   
+    }
+
     $('#mid')[0].value = id;
 
     $('#display')[0].style = '';
@@ -1446,8 +1648,8 @@ function forwardMessage() {
     choices1.clearStore();
     
     $('#subject')[0].value = 'FW: ' + prev['subject'];
-    $('#body')[0].value = `\n\n\n----------\nOriginal from: ${prev['from']}<br><br><blockquote>${prev['text']}</blockquote>`
-    $('#marked').html(htmlsafe(marked($('#body')[0].value)));
+    $('#body')[0].value = `\n\n${$('#signature')[0].value}\n\n\n----------\nOriginal from: ${prev['from']}<br><br><blockquote>${prev['text'] || prev['html']}</blockquote>`
+    render_body();
 }
 
 function replyToMessage() {
@@ -1466,8 +1668,8 @@ function replyToMessage() {
         $('#subject')[0].value = 'RE: ' + prev['subject'];
     }
 
-    $('#body')[0].value = `\n\n\n----------\nReplying to: ${prev['from']}<br><br><blockquote>${prev['text']}</blockquote>`
-    $('#marked').html(htmlsafe(marked($('#body')[0].value)));
+    $('#body')[0].value = `\n\n${$('#signature')[0].value}\n\n\n----------\nReplying to: ${prev['from']}<br><br><blockquote>${prev['html'] || prev['text']}</blockquote>`
+    render_body();
 }
 
 // show and init compose box
@@ -1476,9 +1678,10 @@ function newMessage() {
     choices1.clearStore();
     $('#to').val('');
     $('#subject')[0].value = '';
-    $('#body')[0].value = '';
+    $('#body')[0].value = '\n\n\n' + $('#signature')[0].value;
     $('#msg_pass')[0].value = '';
-    $('#marked')[0].innerHTML = '';
+    render_body();
+    $('#send_at')[0].value = '';
 }
 
 // hide compose box
@@ -1486,11 +1689,68 @@ function hideMessage() {
     $('#movable')[0].style = 'display: none';
 }
 
+function saveToDrafts() {
+    var email = {
+        'to': $('#to')[0].value,
+        'subject': $('#subject')[0].value,
+        'body': $('#body')[0].value,
+        'msg_pass': $('#msg_pass')[0].value,
+        'send_at': $('#send_at')[0].value,
+    };
+    globalThis.drafts.push(email);
+    localStorage.setItem('drafts', globalThis.drafts);
+    discardMessage();
+    hideMessage();
+}
+
+// TODO: err setting fields
+function loadFromDrafts(index) {
+    var email = drafts[index];
+    newMessage();
+    for (key in Object.keys(email)) {
+        if (key == 'to') {
+            var tos = [];
+            var ems = email['to'].split(';');
+            for (i in ems) {
+                tos.push({
+                    value: ems[i],
+                    label: ems[i],
+                })
+            }
+            choices1.setValue(tos);
+        } else {
+            $('#' + key)[0].value = email[key];
+        }
+    }
+}
+
+// save forward email addr
+function saveForward() {
+    var fw_email = $('#forward')[0].value || 'none';
+    api('/settings/forwards', {'email': fw_email}, (res) => {
+        $.notify('Updated: ' + res, 'success');
+    })
+}
+
+// email sig
+function saveSignature() {
+    api('/settings/signature', {'signature': $('#signature')[0].value || 'none'}, (res) => {
+        $.notify('Saved', 'success');
+        console.log(res);
+    })
+}
+
 function sendMessage() {
     var to = $('#to')[0].value;
     var subj = $('#subject')[0].value;
     var body = parse($('#body')[0].value);
     var mpass = $('#msg_pass')[0].value;
+    var send_at = $('#send_at')[0].value;
+    if (send_at) {
+        send_at = (new Date(send_at)).getTime();
+    } else {
+        send_at = 'none';
+    }
     
     if (mpass !== '') {
         create_paste(body, mpass, (res) => {
@@ -1500,11 +1760,13 @@ function sendMessage() {
                 'subject': subj,
                 'text': 'https://paste.marcusj.tech/view/' + uid,
                 'html': '<a id="paste" href="https://paste.marcusj.tech/view/' + uid + '">' + uid + '</a>',
+                'send_at': send_at,
             }, (r) => {
-                if (r['data']['failed'] == 0) {
+                if (r == '202') {
                     $.notify('Sent', 'success');
                     console.log(r);
                     hideMessage();
+                    sa_event('sent_email');
                 } else {
                     $.notify('Error, could not send', 'error');
                     console.log(r);
@@ -1517,8 +1779,9 @@ function sendMessage() {
             'subject': subj,
             'text': body,
             'html': marked(body),
+            'send_at': send_at,
         }, (r) => {
-            if (r['data']['failed'] == 0) {
+            if (r == '202') {
                 $.notify('Sent', 'success');
                 console.log(r);
                 hideMessage();
@@ -1541,6 +1804,7 @@ function discardMessage() {
     $('#from')[0].style['cursor'] = '';
     choices1.clearStore();
     $('#marked')[0].innerHTML = '';
+    $('#send_at')[0].value = '';
 }
 
 function toggleHTML() {
@@ -1583,7 +1847,7 @@ function deleteMessage() {
     var id = $('#mid')[0].value;
 
     if (id) {
-        api('/delete', {'id':id}, (res) => {
+        api('/delete', {'id': id}, (res) => {
             $.notify('DELETED', 'info');
             closeMessage();
             refresh();
@@ -1592,8 +1856,21 @@ function deleteMessage() {
 
     $('#mid')[0].value = '';
 
-    selectedEmails();
+    needChange = true;
+}
+function restoreMessage() {
+    var id = $('#mid')[0].value;
 
+    if (id) {
+        api('/restore', {'id': id}, (res) => {
+            $.notify('Restored', 'info');
+            closeMessage();
+            refresh();
+        })
+    }
+
+    $('#mid')[0].value = '';
+    selectedEmails();
     needChange = true;
 }
 
@@ -1618,27 +1895,72 @@ $('#body_').bind('input propertychange', function() {
 })
 */
 
-// https://stackoverflow.com/a/11077016
-function insertAtCursor(myField, myValue) {
-    //IE support
-    if (document.selection) {
-        myField.focus();
-        sel = document.selection.createRange();
-        sel.text = myValue;
-    }
-    //MOZILLA and others
-    else if (myField.selectionStart || myField.selectionStart == '0') {
-        var startPos = myField.selectionStart;
-        var endPos = myField.selectionEnd;
-        myField.value = myField.value.substring(0, startPos)
-            + myValue
-            + myField.value.substring(endPos, myField.value.length);
-    } else {
-        myField.value += myValue;
-    }
-} // -https://stackoverflow.com/a/11077016
+// https://jsfiddle.net/fauzi/B93TJ/
+$.fn.insertAtCaret = function (text) {
+    return this.each(function () {
+        if (document.selection && this.tagName == 'TEXTAREA') {
+            //IE textarea support
+            this.focus();
+            sel = document.selection.createRange();
+            sel.text = text;
+            this.focus();
+        } else if (this.selectionStart || this.selectionStart == '0') {
+            //MOZILLA/NETSCAPE support
+            startPos = this.selectionStart;
+            endPos = this.selectionEnd;
+            scrollTop = this.scrollTop;
+            this.value = this.value.substring(0, startPos) + text + this.value.substring(endPos, this.value.length);
+            this.focus();
+            this.selectionStart = startPos + text.length;
+            this.selectionEnd = startPos + text.length;
+            this.scrollTop = scrollTop;
+        } else {
+            // IE input[type=text] and other browsers
+            this.value += text;
+            this.focus();
+            this.value = this.value; // forces cursor to end
+        }
+    });
+};
 
-var editor = {
+// https://stackoverflow.com/a/14223324
+$.fn.caret = function (begin, end)
+    {
+        if (this.length == 0) return;
+        if (typeof begin == 'number')
+        {
+            end = (typeof end == 'number') ? end : begin;
+            return this.each(function ()
+            {
+                if (this.setSelectionRange)
+                {
+                    this.setSelectionRange(begin, end);
+                } else if (this.createTextRange)
+                {
+                    var range = this.createTextRange();
+                    range.collapse(true);
+                    range.moveEnd('character', end);
+                    range.moveStart('character', begin);
+                    try { range.select(); } catch (ex) { }
+                }
+            });
+        } else
+        {
+            if (this[0].setSelectionRange)
+            {
+                begin = this[0].selectionStart;
+                end = this[0].selectionEnd;
+            } else if (document.selection && document.selection.createRange)
+            {
+                var range = document.selection.createRange();
+                begin = 0 - range.duplicate().moveStart('character', -100000);
+                end = begin + range.text.length;
+            }
+            return { begin: begin, end: end };
+        }
+    }
+
+const editor = {
     'italics': function() {
         var e = $('#body')[0];
         var s = e.selectionStart;
@@ -1653,9 +1975,44 @@ var editor = {
         e.value.substring(e.selectionEnd);
         e.selectionEnd = s + 2;
     },
+    'h1': function() {
+        this.insert('# ');
+    },
+    'h2': function() { this.insert('## ') },
+    'h3': function() { this.insert('### ') },
+    'hyperlink': function() {
+        var url = prompt('URL: ');
+        var text = prompt('Link Text: ');
+        if (url && text) {
+            this.insert(`[${text}](${url})`);
+        }
+    },
+    'code': function() {
+        this.insert('``', c=-1);
+    },
+    'codeblock': function() {
+        this.insert('``````', c=-3);
+    },
 
-    'insert': function(text) {
-        insertAtCursor($('#body')[0], text);
+    'insert': function(text, c=null) {
+        $('#body').insertAtCaret(text);
+        if (c != null) {
+            this.moveCaret(c);
+        } else {
+            this.moveCaret(text.length);
+        }
+    },
+    'clear': function() {
+        $('#body')[0].value = '';
+    },
+    'repl': function() {
+        var url = prompt('Repl URL:');
+        var repl = url.split('@')[1].split('#')[0];
+        this.insert('{' + `{ repl|${repl} }` + '}')
+    },
+
+    'moveCaret': function(n) {
+        $('#body').caret($('#body').caret().end + n);
     },
 }
 
@@ -1695,8 +2052,12 @@ $('#body')[0].addEventListener('paste', (event) => {
     }
 }, false)
 
+function render_body() {
+    $('#marked').html(htmlsafe(parse(marked($('#body')[0].value))));
+}
+
 $('#body').on('input propertychange', (e) => {
-    $('#marked').html(htmlsafe(marked($('#body')[0].value)));
+    render_body();
 })
 
 shortcut.add('ctrl+enter', sendMessage);
@@ -1735,6 +2096,7 @@ function api(uri, data, callback) {
         success: callback
     })
 }
+
 $( function() {
     api('/settings/forwards', {}, (addr) => {
         if (addr == 'none') {
@@ -1744,31 +2106,14 @@ $( function() {
     })
     $('#' + globalThis.theme).prop('selected', true);
 })
-function fastGet(start, end) {
-    api('/v2/get', {
-        'start': start,
-        'end': end,
-    }, (newEmails) => {
-        globalThis.emails = Object.assign({}, globalThis.emails, newEmails);
-    })
-}
+
 function newAPIKey() {
     api('/generate', {}, (key) => {
         $('#api_key')[0].value = key;
         refreshQRCode();
     })
 }
-function saveForward() {
-    var addr = $('#forward')[0].value;
-
-    if (addr == '') {
-        addr = 'none';
-    }
-
-    api('/settings/forwards', {'email': addr}, (res) => {
-        $.notify('Forward address changed to: ' + res, 'success');
-    })
-}// -------- idk waht to do bout these stuff so u do it marcus lol ----END
+// -------- idk waht to do bout these stuff so u do it marcus lol ----END
 
 function saveTheme() {
     var darkmode = $('#switch')[0].checked;
@@ -1809,6 +2154,12 @@ function saveDateFormat() {
     else {
         setSetting('dateFormat','simple');
     }
+}
+
+function get_sent() {
+    api('/sent', {}, (sent) => {
+        globalThis.sentEmails = sent;
+    })
 }
 
 </script>

@@ -1,3 +1,16 @@
+'''
+YO RAFI
+
+Basically I've moved to a new email host (the one that came with my domain marcusj.tech)
+Its been forwarding there for a few days (and to the gmail too) but some older emails wont show up
+
+Also sending email ive changed from smtp2go to sendgrid because sendgrid lets you send more, that seems to have gone smoothly
+
+Okay fuck yes everything works well, now time to see if i can add more
+
+IMPORTANT: sometimes the IMAP client breaks completely and just doesnt refresh, so I added in a JS function that should solve it, I've limited users to calling it once per minute cause it basically re-logs in to the imap server but i think it should fix errors. its fix_api()
+'''
+
 from flask import (
     Flask,
     request,
@@ -9,14 +22,18 @@ from flask import (
 from flask_cors import CORS
 from flask_mobility import Mobility
 from flask_limiter import Limiter
-
 from replit import db
-#from lib.db import DB, from_env #DB
-from lib.mail import SMTP, Gmail
+from imap_tools import (
+    MailBox,
+    A as ALL,
+)
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
+
 from lib.wrap import get_profile
 
-from google.api_core.exceptions import ResourceExhausted
-import os, uuid, requests, io, base64
+import os, uuid, requests, io, base64, logging
 
 app = Flask(__name__)
 CORS(app)
@@ -27,14 +44,13 @@ limiter = Limiter(
 )
 app.config['SECRET_KEY'] = os.getenv('SECRET')
 
-#store = DB(from_env('CONF')) #DB
-smtp = SMTP(os.getenv('API'))
-gmail = Gmail(os.getenv('GMAIL_USER'), os.getenv('GMAIL_PASS'))
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR) # shut up flask
 
-try:
-    ALL_USERS = [(u + '@repl.email') for u in db.keys() if not u == 'forwards']
-except ResourceExhausted:
-    ALL_USERS = []
+mb = MailBox('imap.marcusj.tech').login(os.getenv('N_USER'), os.getenv('N_PASS'))
+sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
+
+ALL_USERS = [(u + '@repl.email') for u in db.keys() if not u in ['forwards', 'flags', 'events']]
 
 PROFILE_PICS = {}
 
@@ -42,6 +58,7 @@ SETTINGS = {
     'theme': ['dark', 'light'],
     'style': ['modern', 'classic'],
     'dateFormat': ['simple', 'detailed'],
+    'signature': ['*Sent with [**repl.email**](https://repl.email)*']
 }
 
 DEFAULT_SETTINGS = {k:v[0] for k,v in SETTINGS.items()}
@@ -62,8 +79,6 @@ def upload_files(file):
         'key': os.getenv('MF_PROXY')
     }, files=files).json()['0']
 
-# if gmail wont cooperate: https://accounts.google.com/b/0/DisplayUnlockCaptcha (if acc id is 0)
-
 @app.before_request
 def app_before_request():
     if request.path.split('/')[-1] in ['', 'login', 'auth']:
@@ -72,12 +87,19 @@ def app_before_request():
 
 @app.route('/')
 def app_test_index():
-    return render_template('index.html')
-
+    return render_template('index.html', isMobile=request.MOBILE, MarcusWeinberger=pfp('MarcusWeinberger'), rafrafraf=pfp('rafrafraf'))
 
 @app.route('/login')
 def app_login():
-    return render_template('login.html')
+    if 'k' in request.args:
+        usern, apik = base64.b64decode(request.args['k']).decode().split(':')
+        user = db.get(usern)
+        if apik == user.get('api_key'):
+            session['user'] = usern
+            session['token'] = apik
+            session['pfp'] = pfp(usern)
+            return redirect('/app')
+    return render_template('login.html', isMobile=request.MOBILE)
 
 @app.route('/noreplauth', methods=['POST'])
 def app_norepl_auth():
@@ -104,13 +126,13 @@ def app_auth():
         user = db.get(user_name)
         if not user:
             db[user_name] = DEFAULT_SETTINGS
-            smtp.send(
-                'MarcusWeinberger@repl.email',
-                [user_name + '@repl.email'],
-                'Welcome to repl.email!',
-                text='Click the toggle HTML button to view this message',
-                html=open('new_user.html','r').read(),
-            )
+            #smtp.send(
+            #    'MarcusWeinberger@repl.email',
+            #    [user_name + '@repl.email'],
+            #    'Welcome to repl.email!',
+            #    text='Click the toggle HTML button to view this message',
+            #    html=open('new_user.html','r').read(),
+            #)
         user = db.get(user_name)
 
         session['user'] = user_name
@@ -119,19 +141,18 @@ def app_auth():
         session['theme'] = user.get('theme')
         return redirect('/app')
 
-
 @app.route('/webhooks', methods=['POST'])
 def app_webhooks():
     fw = db.get('forwards', {}).get(request.form['rcpt'], '').replace('@repl.email', '')
     if not fw == '' or fw == 'none':
         if '; ' in fw: fw = fw.split('; ')
         else: fw = [fw]
-        smtp.send(
-            request.form.get('sender'),
-            fw,
-            request.form.get('subject'),
-            html='<h1>New Email</h1><h3><a href="https://repl.email/app">Click here to view</a></h3>'
-        )
+        sg.send(Mail(
+            from_email = request.form.get('sender'),
+            to_emails = fw,
+            subject = request.form.get('subject'),
+            html_content = '<h1>New Email</h1><h3><a href="https://repl.email/app">Click here to view</a></h3>'
+        ))
     return ''
 
 @app.route('/logout')
@@ -166,11 +187,13 @@ def app_redirect():
 
 @app.route('/settings')
 def app_settings():
-    user = session.get('user')
-    token = session.get('token')
-    if not user:
-        return redirect('/login')
-    return render_template('settings.html', user=user, token=token, pfp=session.get('pfp'), **db.get(user, {}), isMobile=request.MOBILE)
+    return redirect('/app?action=settings')
+
+@app.route('/tracking/<id>.png')
+def app_tracking(id):
+    if id in db['events']:
+        db['events'] = {**db['events'], id: True}
+        return base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApocMXEAAAAASUVORK5CYII=')
 
 # API
 
@@ -184,6 +207,11 @@ def api_auth(request, session):
             return True
     return False
 
+def valid_ids(ids):
+    return [str(id) for id in ids if not len([*mb.fetch(ALL(to=f'{session["user"]}@repl.email', uid=str(id)), headers_only=True)]) == 0]
+def valid_dict(d):
+    vids = valid_ids(list(d.keys()))
+    return {i: d[i] for i in vids}
 
 def NO_AUTH():
     return jsonify({'err': 'missing token'})
@@ -200,14 +228,6 @@ def app_api_fetch_contacts():
         return jsonify({'contacts': ALL_USERS})
     return NO_AUTH()
 
-@app.route('/api/sent', methods=['POST'])
-def app_api_sent():
-    if api_auth(request, session):
-        emails = gmail.search(f'from:{session["user"]}@repl.email')
-        data = {i: gmail.get(i) for i in emails}
-        return jsonify(data)
-    return NO_AUTH()
-
 @app.route('/api/send', methods=['POST'])
 def app_api_send():
     if api_auth(request, session):
@@ -215,15 +235,26 @@ def app_api_send():
         if data['to'][0].startswith('list:') and session['user'] in ['MarcusWeinberger', 'rafrafraf']:
             if data['to'][0] == 'list:all':
                 data['to'] = ALL_USERS
-        payload = {
-            'sender': session['user'] + '@repl.email',
-            'recipients': data['to'], # [f'{session["user"]}+sent@repl.email', *data['to']],
-            'subject': data.get('subject'),
-            'text': data.get('text'),
-            'html': data.get('html'),
-        }
-        res = smtp.send(**payload)
-        return jsonify(res.json)
+        tracker = str(uuid.uuid4())
+        db['events'] = {**db.get('events', {}), tracker: False}
+        url = f'https://repl.email/tracking/{tracker}.png'
+        message = Mail(
+            from_email = f'{session["user"]}@repl.email',
+            to_emails = data['to'],
+            subject = data['subject'],
+            html_content = data.get('html', data.get('text', '')) + f'<img id="tracking" src="{url}"/>',
+        )
+        if not data.get('send_at', 'none') == 'none':
+            message.send_at = int(str(data['send_at'])[:10])
+        res = sg.send(message)
+        return str(res.status_code)
+    return NO_AUTH()
+
+@app.route('/api/tracking', methods=['POST'])
+def api_tracking():
+    if api_auth(request, session):
+        id = request.get_json().get('id')
+        return jsonify({'status': db['events'].get(id)})
     return NO_AUTH()
 
 @app.route('/api/upload', methods=['POST'])
@@ -277,118 +308,158 @@ def app_api_settings_forwards():
         if email and email.endswith('@repl.email'): email = False
         fw = db.get('forwards', {}).get(session['user'])
         if email:
-            db['forwards'] = {**db['forwards'], session['user']: email}
+            db['forwards'] = {**db.get('forwards', {}), session['user']: email}
         return fw or ''
     return NO_AUTH()
 
-'''
-@app.route('/api/settings/theme', methods=['POST'])
-def app_api_settings_theme():
+@app.route('/api/settings/signature', methods=['POST'])
+def app_api_settings_signature():
     if api_auth(request, session):
-        user = db.get(session['user'], {})
-        if (t:=request.get_json().get('theme')):
-            if t in ['light', 'dark']:
-                user.set({'theme':t})
-                session['theme'] = t
-                return t
-        return session.get('theme', 'light')
-    return NO_AUTH()
-'''
-
-@app.route('/api/delete', methods=['POST'])
-def app_api_delete():
-    if api_auth(request, session):
-        id = int(request.get_json()['id'])
-        if id in gmail.search(f'to:{session["user"]}@repl.email'):
-            gmail.client.set_gmail_labels(id, 'DELETED')
-            return 'ok'
+        sig = request.get_json().get('signature', 'none')
+        if not sig == 'none':
+            db['signature'] = {**db.get('signature', {}), session['user']: sig}
+            return sig
+        return db.get('signature', {}).get(session['user'], 'none')
     return NO_AUTH()
 
 @app.route('/api/delete/forever', methods=['POST'])
-def app_api_real_delete():
+def api_delete_forever():
     if api_auth(request, session):
-        id = int(request.get_json()['id'])
-        if id in gmail.search(f'to:{session["user"]}@repl.email'):
-            gmail.client.delete_messages([id])
-            gmail.client.expunge(messages=[id])
-            return 'ok'
+        ids = valid_ids(request.get_json().get('ids', []))
+        mb.delete(ids)
+        return 'ok'
+
+@limiter.limit('1 per minute')
+@app.route('/api/relog', methods=['POST'])
+def api_relog():
+    if api_auth(request, session):
+        globals()['mb'] = MailBox('imap.marcusj.tech').login(os.getenv('N_USER'), os.getenv('N_PASS'))
+        return 'ok'
     return NO_AUTH()
 
 @app.route('/api/get', methods=['POST'])
-def app_api_get():
+def apiv3_get():
     if api_auth(request, session):
-        emails = gmail.search(f'to:{session["user"]}@repl.email')[:request.get_json().get('num', -1)]
-        data = {i: gmail.get(i) for i in emails}
         try:
-            return jsonify(data)
+            emails = [*mb.fetch(ALL(to=f'{session["user"]}@repl.email'))]
+            return jsonify({
+                msg.uid: {
+                    'from': msg.from_,
+                    'to': msg.to,
+                    'subject': msg.subject,
+                    'text': msg.text,
+                    'html': msg.html,
+                    'attatchments': [
+                        {'filename': att.filename, 'filetype': att.content_type, 'data': base64.b64encode(att.payload).decode()} for att in msg.attachments
+                    ],
+                    'date': msg.date_str,
+                    'flags': db.get('flags', {}).get(msg.uid, msg.flags),
+                } for msg in emails
+            })
         except Exception as e:
-            print(e, ':', data)
-            return jsonify({e:data}) # rafi did dis
+            print('err:',e)
+            globals()['mb'] = MailBox('imap.marcusj.tech').login(os.getenv('N_USER'), os.getenv('N_PASS'))
+            return redirect('/api/get')
     return NO_AUTH()
 
-@app.route('/api/v2/get', methods=['POST'])
-def apiv2_get():
+@app.route('/api/sent', methods=['POST'])
+def api_sent():
     if api_auth(request, session):
-        emails = gmail.search(f'to:{session["user"]}@repl.email')
-        data = request.get_json()
-        emails = emails[data.get('start', 0):data.get('end', -1)]
-        res = {i: gmail.get(i) for i in emails}
         try:
-            return jsonify(res)
+            emails = [*mb.fetch(ALL(from_=f'{session["user"]}@repl.email'))]
+            return jsonify({
+                msg.uid: {
+                    'from': msg.from_,
+                    'to': msg.to,
+                    'subject': msg.subject,
+                    'text': msg.text,
+                    'html': msg.html,
+                    'attatchments': [
+                        {'filename': att.filename, 'filetype': att.content_type, 'data': base64.b64encode(att.payload).decode()} for att in msg.attachments
+                    ],
+                    'date': msg.date_str,
+                    'flags': ['SENT'],
+                } for msg in emails
+            })
         except Exception as e:
-            print(e, ':', res)
-            return jsonify({e:res})
+            print('err:',e)
+            globals()['mb'] = MailBox('imap.marcusj.tech').login(os.getenv('N_USER'), os.getenv('N_PASS'))
+            return redirect('/api/sent')
     return NO_AUTH()
 
-@app.route('/api/get/by/flag', methods=['POST'])
-def app_api_get_by_flag():
+@app.route('/api/delete', methods=['POST'])
+def api_delete():
     if api_auth(request, session):
-        data = request.get_json()
-        flag = data['flag']
-        num = data.get('num', -1)
-        emails = gmail.search(f'to:{session["user"]}@repl.email label:{flag}')[:num]
-        return jsonify({i: gmail.get(i) for i in emails})
+        id = request.get_json().get('id')
+        if [*mb.fetch(ALL(to=f'{session["user"]}@repl.email', uid=id))]:
+            d = db['flags'].get(id, [])
+            d.append('DELETED')
+            db['flags'] = {**db['flags'], id: d}
+            return 'ok'
+        return 'err'
+    return NO_AUTH()
+
+@app.route('/api/restore', methods=['POST'])
+def api_restore():
+    if api_auth(request, session):
+        id = request.get_json().get('id')
+        if [*mb.fetch(ALL(to=f'{session["user"]}@repl.email', uid=id))]:
+            d = db['flags'].get(id, [])
+            if 'DELETED' in d: d.remove('DELETED')
+            db['flags'] = {**db['flags'], id: d}
+            return 'ok'
+        return 'err'
     return NO_AUTH()
 
 @app.route('/api/flag', methods=['POST'])
-def app_api_flag():
+def apiv3_flag():
     if api_auth(request, session):
-        data = request.get_json()
-        data = {int(d):data[d] for d in data}
-        emails = gmail.search(f'to:{session["user"]}@repl.email')
-        if not all([id in emails for id in data.keys()]):
-            return 'no'
-        ndata = {
-            id:[('\\' + x) for x in flags] for id,flags in data.items()
-        }
-        for id in ndata:
-            gmail.client.set_gmail_labels(id, ndata[id])
-        return 'ok'
+        data = request.get_json() or {}
+        valid = {}
+        for uid, flags in data.items():
+            if [*mb.fetch(ALL(to=f'{session["user"]}@repl.email', uid=uid))]:
+                valid[uid] = flags
+        if valid:
+            db['flags'] = {**db['flags'], **valid}
+        return jsonify(valid)
     return NO_AUTH()
 
-''''
-@app.route('/api/flag', methods=['POST'])
-def app_api_flag():
+@app.route('/api/flag/add', methods=['POST'])
+def api_flag_add():
     if api_auth(request, session):
         data = request.get_json()
-        ids = data.get('ids', [])
-        if not type(ids) is list: ids = [ids]
-        flags = [('\\' + x) for x in data.get('flags', [])]
-        emails = gmail.search(f'to:{session["user"]}@repl.email')
-        if not all([id in emails for id in ids]):
-            return 'no'
+        ids = valid_ids(data.get('ids', []))
+        flag = data.get('flag', False)
 
-        res = gmail.client.set_gmail_labels(ids, flags)
-        return 'ok'
+        if ids and flag:
+            newflags = {}
+            for id in ids:
+                if not flag in (f:=db['flags'].get(id, [])):
+                    newflags[id] = f
+                    newflags[id].append(flag)
+            db['flags'] = {**db['flags'], **newflags}
+            return 'ok'
     return NO_AUTH()
-'''
+
+@app.route('/api/flag/remove', methods=['POST'])
+def api_flag_remove():
+    if api_auth(request, session):
+        data = request.get_json()
+        ids = valid_ids(data.get('ids', []))
+        flag = data.get('flag', False)
+
+        if ids and flag:
+            newflags = {}
+            for id in ids:
+                if flag in (f:=db['flags'].get(id, [])):
+                    newflags[id] = f
+                    newflags[id].remove(flag)
+            db['flags'] = {**db['flags'], **newflags}
+            return 'ok'
+    return NO_AUTH()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
-
-
-
-
 
 
 

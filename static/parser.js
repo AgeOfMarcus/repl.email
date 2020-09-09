@@ -49,6 +49,16 @@ function parse(text) {
 
         match = re.next();
     }
+/*
+    var users = text.matchAll(/(\s\@[a-zA-Z0-9_]{2,16})/g);
+    var match = users.next();
 
+    while (!match.done) {
+        var usr = match.value[1].split('@')[1];
+        var rep = match.value[0];
+
+        text = text.split(rep).join(`<a href='https://repl.it/@${usr}'>@${usr}</a>`);
+    }
+*/
     return text;
 }

@@ -63,13 +63,13 @@
         </a>
 
         <div id='logo-cont' style='display: block; padding: 15px 15px;'>
-            <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
+            <img class='nav-image' src='./static/mail2-small.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
         </div>
     </div>
 </div>
 
 <div style='display: flex'>
-<ul class='navbar' style="display: none">
+<ul class='navbar'>
     <li class='nav active'><a href='/'>Home</a></li>
     <li class='nav'><a href='/login'>Login</a></li>
 
@@ -87,6 +87,10 @@
     <br>
 
     <a href='/__repl'><img src='https://repl.it/badge/github/AgeOfMarcus/AgeOfMarcus'></a>
+    
+    <br><br>
+
+    {% include "badge.html" %}
 
     <br><br>
     <style>
@@ -108,6 +112,12 @@
         #update-label:hover #updates-btn {
             color: #478ed4 !important;
         }
+
+        .pfp {
+            width: 35px;
+            height: auto;
+            cursor: pointer;
+        }
     </style>
     <label id='update-label' style='cursor: pointer'>
         <h2 id='updates-btn'>Updates</h2>
@@ -127,7 +137,7 @@
     <br><br>
     
     <p>
-        Hosted <b>without a mailserver</b> thanks to <a href='https://smtp2go.com'>smtp2go</a> and <a href='https://improvmx.com'>improvmx</a>.
+        Hosted <b>without a mailserver</b> thanks to <a href='https://sendgrid.com'>sendgrid</a> and <a href='https://improvmx.com'>improvmx</a>.
     </p>
 
     <br>
@@ -135,11 +145,17 @@
     <h2>Developers</h2>
 
     <ul>
-        <li><a href='https://repl.it/@MarcusWeinberger'>Marcus Weinberger</a></li>
-        <li><a href='https://repl.it/@rafrafraf'>Rafi Asmoucha</a></li>
+        <li><a href='https://repl.it/@MarcusWeinberger'><img class='pfp' src='{{ MarcusWeinberger }}'><br>Marcus Weinberger</a></li>
+        <li><a href='https://repl.it/@rafrafraf'><img class='pfp' src='{{ rafrafraf }}'><br>Rafi Asmoucha</a></li>
     </ul>
 
     <br><br>
+
+    <script>
+        if (window.matchMedia("(max-width: 700px)").matches) {
+            toggleNav();
+        }
+    </script>
 </div>
 </div>
 {% endblock %}

@@ -19,6 +19,10 @@
     height: 150px;
     padding-top: 10px;
 }
+
+#reader button {
+    padding: 0 5px;
+}
 </style>
 
 <!-- mobile responsive -->
@@ -65,13 +69,13 @@
         </a>
 
         <div id='logo-cont' style='display: block; padding: 15px 15px;'>
-            <img class='nav-image' src='./static/mail.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
+            <img class='nav-image' src='./static/mail2-small.png' onclick='window.location.href = "/"' style='width: 35px; height: auto; float: left' />
         </div>
     </div>
 </div>
 
 <div style='display: flex;'>
-<ul class='navbar' style='display: none;'>
+<ul class='navbar'>
     <li class='nav'><a href='/'>Home</a></li>
     <li class='nav active'><a href='/login'>Login</a></li>
     <!--
@@ -104,18 +108,18 @@
         <h2 id='safari'>On safari?</h2>
         <h3>Get your <a href='/settings'>API Key</a> from another browser and sign in here</h3>
 
-        <form action='/noreplauth' method='POST' id='noreplauth_form'>
+        <form style='border: 1px solid silver;' action='/noreplauth' method='POST' id='noreplauth_form'>
             <label for='user'>repl.it username</label>
-            <input name='user' id='f_user'><br>
+            <input style='width: 90%' name='user' id='f_user'><br>
             <label for='apik'>API Key</label>
-            <input name='apik' id='f_apik'><br><br>
+            <input style='width: 90%' name='apik' id='f_apik'><br><br>
 
             <input type='submit'>
         </form>
         <br>
 
         <h4>Or scan your QR code</h4>
-        <div style="width: 500px" id="reader"></div>
+        <div style="margin-bottom: 10px;" id="reader"></div>
     </div>
 
     <div style='height: 100px; background-color: transparent;' />
@@ -125,6 +129,9 @@
 <script>
 
 function onScanSuccess(qrCodeMessage) {
+    if (qrCodeMessage.includes('/login')) {
+        qrCodeMessage = atob(qrCodeMessage.split('k=')[-1]);
+    }
 	var user = qrCodeMessage.split(':')[0];
     var apik = qrCodeMessage.split(':')[1];
     $('#f_user')[0].value = user;
@@ -135,6 +142,10 @@ function onScanSuccess(qrCodeMessage) {
 var html5QrcodeScanner = new Html5QrcodeScanner(
 	"reader", { fps: 10, qrbox: 250 });
 html5QrcodeScanner.render(onScanSuccess);
+
+if (window.matchMedia("(max-width: 700px)").matches) {
+    toggleNav();
+}
 
 </script>
 {% endblock %}
